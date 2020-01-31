@@ -16,7 +16,7 @@ ROICrs = re.search('epsg:(.*)', ROIData.crs["init"])
 if ROICrs:
     ROICrs = ROICrs.group(1)
 
-# Télécharger les données de forêt de NRCan
+# Télécharger les données de forêt de NRCan RRRRRRRRRRRRRR
 rasters = []
 
 outputDir = r"Z:\MALAM357\GMT-3051 Projet en génie géomatique II\Données\Forêt"
