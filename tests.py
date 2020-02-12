@@ -4,7 +4,10 @@ import osr
 import urllib
 import geopandas as gpd
 import rasterio as rio
+import json
+import pycrs
 from rasterio.merge import merge
+from rasterio.mask import mask
 from rasterio.plot import show
 from rasterio.warp import calculate_default_transform, reproject, Resampling
 import gdal
@@ -79,16 +82,40 @@ def reprojectRaster(inPath, outPath, dstCRS):
                 reproject(source = rio.band(src, i), destination = rio.band(dst, i), src_transform = src.transform, src_crs = src.crs, dst_transform = transform, dst_crs = dst_crs, resampling = Resampling.nearest)
 
 # Fonction permettant d'ouvrir un raster et de l'ajouter à une liste de rasters ouverts.
-# inpath: String représentant le chemin vers le fichier raster entrant.
+# inPath: String représentant le chemin vers le fichier raster entrant.
 # rasters: List de rasters ouverts.
 def addRastertoRasters(inPath, rasters):
     raster = rio.open(inPath)
     rasters.append(raster)
 
+# Fonction permettant de transformer une géométrie d'une geodataframe en format json.
+# gdf: objet de type geodataframe contenant un champ 'geometry'.
+def geoToJson(gdf):
+    return[json.loads(gdf.to_json())['features'][0]['geometry']]
+
+# Fonction permettant de découper un raster selon une région d'intérêt.
+# inRaster: String représentant le chemin vers le fichier raster entrant.
+# clipPoly: objet de type json représentant le polygone servant au découpage.
+def clipRaster(inPath, outPath, clipPoly, epsgPoly):
+    fileName = os.path.basename(inPath)
+    print("Clipping raster " + fileName + "...")
+
+    raster = rio.open(inPath)
+    outRaster, outTransform = mask(dataset = raster, shapes = clipPoly, crop = True)
+    outMeta = raster.meta.copy()
+
+    outMeta.update({"driver": "GTiff", "height": outRaster.shape[1], "width": outRaster.shape[2], "transform": outTransform, "crs": pycrs.parse.from_epsg_code(epsgPoly).to_proj4()})
+
+    with rio.open(outPath, "w", **outMeta) as dest:
+        dest.write(outRaster)
+
 def main():
     # Importer et lire les données du shapelefile représentant la zone d'intérêt.
-    ROIPath = "Z:/MALAM357/GMT-3051 Projet en génie géomatique II/Données/ROI/ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
+    ROIPath = "Z:/MALAM357/GMT-3051 Projet en génie géomatique II/LymeProjet/ROI/ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
     ROIData = gpd.read_file(ROIPath)
+
+    # Transformer en format json
+    ROIDataJson = geoToJson(ROIData)
 
     # Extraire le code EPSG (la projection) de la zone d'intérêt.
     ROICRS, ROICRSStr = extractEPSGVector(ROIData)
@@ -111,29 +138,65 @@ def main():
 
     # Pour chaque lien de la liste
     for url in urlList:
+        # Spécifier le lien vers le fichier de sortie.
         outPath = os.path.join(foretsDir, os.path.basename(url))
+        outPathReproject = outPath.replace(".", "_reproject.")
+        outPathClip = outPath.replace(".", "_clip.")
 
+        # Si le fichier n'existe pas.
         if not os.path.exists(outPath):
+            # Télécharger la donnée.
             downloadData(url, outPath)
 
+            # Extraire le code EPSG de la donnée téléchargée.
             rasterCRS, rasterCRSStr = extractEPSGRaster(outPath)
 
+            # Si la projection n'est pas la même que celle de la région d'intérêt.
             if rasterCRS != ROICRS:
-                reprojectRaster(outPath, outPath.replace(".", "_reproject."), ROICRSStr)
-                addRastertoRasters(outPath.replace(".", "_reproject."), rasters)
+                if not os.path.exists(outPathReproject):
+                    # Reprojeter la donnée.
+                    reprojectRaster(outPath, outPathReproject, ROICRSStr)
+
+                if not os.path.exists(outPathClip):
+                    # Découper le fichier.
+                    clipRaster(outPathReproject, outPathClip, ROIDataJson, ROICRS)
+
+                    # Ajouter la donnée à la liste.
+                    addRastertoRasters(outPathClip, rasters)
 
             else:
-                addRastertoRasters(outPath, rasters)
+                if not os.path.exists(outPathClip):
+                    # Découper le fichier.
+                    clipRaster(outPath, outPathClip, ROIDataJson, ROICRS)
 
+                    # Ajouter la donnée à la liste.
+                    addRastertoRasters(outPathClip, rasters)
+
+        # Si le fichier existe.
         else:
+            # Extraire le code EPSG de la donnée téléchargée.
             rasterCRS, rasterCRSStr = extractEPSGRaster(outPath)
 
+            # Si la projection n'est pas la même que celle de la région d'intérêt.
             if rasterCRS != ROICRS:
-                reprojectRaster(outPath, outPath.replace(".", "_reproject."), ROICRSStr)
-                addRastertoRasters(outPath.replace(".", "_reproject."), rasters)
+                if not os.path.exists(outPathReproject):
+                    # Reprojeter la donnée.
+                    reprojectRaster(outPath, outPathReproject, ROICRSStr)
+
+                if not os.path.exists(outPathClip):
+                    # Découper le fichier.
+                    clipRaster(outPathReproject, outPathClip, ROIDataJson, ROICRS)
+
+                    # Ajouter la donnée à la liste.
+                    addRastertoRasters(outPathClip, rasters)
 
             else:
-                addRastertoRasters(outPath, rasters)
+                if not os.path.exists(outPathClip):
+                    # Découper le fichier.
+                    clipRaster(outPath, ROIDataJson, ROICRS)
+
+                    # Ajouter la donnée à la liste.
+                    addRastertoRasters(outPath.replace(".", "_clip."), rasters)
 
 if __name__ == "__main__":
     main()
