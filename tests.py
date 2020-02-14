@@ -13,7 +13,7 @@ from rasterio.warp import calculate_default_transform, reproject, Resampling
 import gdal
 import matplotlib.pyplot as plt
 
-# Fonction permettant d'extraire le code EPSG (la projection) de données vectorielles.
+# Fonction permettant d'extraire le code EPSG (la projection) d'une donnée vectorielle.
 # data: objet geopandas représentant la donnée vectorielle.
 # dataCRS: entier représentant le code EPSG de la projection utilisée.
 # dataCRSStr: String représentant le code EPSG de la projection utilisée (EPSG:#).
@@ -43,7 +43,7 @@ def extractEPSGRaster(inPath):
 
 # Fonction permettant de créer une liste de fichiers de type raster.
 # inDir: String représentant le répertoire où sont stockées les fichiers.
-# extension: String représentant un pattern que doit respecter le nom du fichier.
+# extension: String ou tuple représentant le(s) extension(s) à rechercher.
 # rasterFiles: List contenant les fichiers de type raster.
 def listRasterFiles(inDir, extension):
     rasterFiles = []
@@ -66,7 +66,7 @@ def downloadData(url, outPath):
 # Fonction permettant de reprojeter un fichier de type raster.
 # inPath: String représentant le chemin vers le fichier raster entrant.
 # outPath: String représentant le chemin vers le fichier raster sortant.
-# dstCrs: String représentant le code EPSG de la projection voulue (EPSG:#)
+# dstCrs: String représentant le code EPSG de la projection voulue (EPSG:#).
 def reprojectRaster(inPath, outPath, dstCRS):
     dst_crs = dstCRS
     fileName = os.path.basename(inPath)
