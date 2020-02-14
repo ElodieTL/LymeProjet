@@ -17,3 +17,7 @@
 4. Taper `git push` pour déposer les fichiers sur GitHub. 
 
 Note: La taille maximale d'un fichier téléversé est de 100 Mo.
+
+#### Comment vérifier le statut du dossier *LymeProjet*
+1. Cliquer-droit sur le répertoire *LymeProjet* et sélectionner *Git Bash Here*.
+2. Taper `git status` afin de voir quel(s) fichier(s) a (ont) été ajouté(s) a l'aide de l'appel `git add`.
