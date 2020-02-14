@@ -15,3 +15,5 @@
 2. Taper `git add <fichier>` pour ajouter un fichier.
 3. Taper `git commit -m '<message>'` pour confirmer l'ajout d'un ou plusieurs fichiers.
 4. Taper `git push` pour déposer les fichiers sur GitHub. 
+
+Note: La taille maximale d'un fichier téléversé est de 100 Mo.
