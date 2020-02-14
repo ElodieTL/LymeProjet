@@ -109,7 +109,38 @@ def clipRaster(inPath, outPath, clipPoly, epsgPoly):
     with rio.open(outPath, "w", **outMeta) as dest:
         dest.write(outRaster)
 
+# Fonction permettant d'extraire la hauteur et la largeur d'un pixel pour un raster.
+# inPath: String représentant le chemin vers le fichier raster entrant.
+# width: largeur d'un pixel.
+# height: hauteur d'un pixel.
+def getPixelSize(inPath):
+    raster = rio.open(inPath)
+    width = raster.transform[0]
+    height = -(raster.transform[4])
+
+    return width, height
+
+#
+def resampleRaster(inPath, outPath, width, pixelSize):
+    fileName = os.path.basename(inPath)
+    print("Resampling raster " + fileName + "...")
+
+    factor = width / pixelSize
+
+    raster = rio.open(inPath)
+    meta = raster.meta.copy()
+
+    data = raster.read(out_shape = (raster.count, int(raster.width * factor), int(raster.height * factor)), resampling = Resampling.bilinear)
+    transform = raster.transform * raster.transform.scale((raster.width / data.shape[-2]), (raster.height / data.shape[-1]))
+    meta.update({"driver": "GTiff", "height": int(raster.height * factor), "width": int(raster.width * factor), "transform": transform})
+
+    with rio.open(outPath, 'w', **meta) as dst:
+        dst.write(data)
+
 def main():
+    # Dimension d'un pixel.
+    pixelSize = 30
+
     # Importer et lire les données du shapelefile représentant la zone d'intérêt.
     ROIPath = "Z:/MALAM357/GMT-3051 Projet en génie géomatique II/LymeProjet/ROI/ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
     ROIData = gpd.read_file(ROIPath)
@@ -138,65 +169,38 @@ def main():
 
     # Pour chaque lien de la liste
     for url in urlList:
-        # Spécifier le lien vers le fichier de sortie.
+        # Spécifier les liens vers les fichiers de sortie.
         outPath = os.path.join(foretsDir, os.path.basename(url))
         outPathReproject = outPath.replace(".", "_reproject.")
         outPathClip = outPath.replace(".", "_clip.")
+        outPathResample = outPath.replace(".", "_resample_" + str(pixelSize) + ".")
 
-        # Si le fichier n'existe pas.
+        # Si le fichier raster d'origine n'existe pas.
         if not os.path.exists(outPath):
-            # Télécharger la donnée.
             downloadData(url, outPath)
 
-            # Extraire le code EPSG de la donnée téléchargée.
-            rasterCRS, rasterCRSStr = extractEPSGRaster(outPath)
+        # Extraire le code EPSG de la donnée téléchargée.
+        rasterCRS, rasterCRSStr = extractEPSGRaster(outPath)
 
-            # Si la projection n'est pas la même que celle de la région d'intérêt.
-            if rasterCRS != ROICRS:
-                if not os.path.exists(outPathReproject):
-                    # Reprojeter la donnée.
-                    reprojectRaster(outPath, outPathReproject, ROICRSStr)
+        # Si la projection n'est pas la même que celle de la région d'intérêt et qu'un raster reprojeté n'existe pas.
+        if rasterCRS != ROICRS and not os.path.exists(outPathReproject):
+            reprojectRaster(outPath, outPathReproject, ROICRSStr)
 
-                if not os.path.exists(outPathClip):
-                    # Découper le fichier.
-                    clipRaster(outPathReproject, outPathClip, ROIDataJson, ROICRS)
+        # Si un raster découpé n'existe pas.
+        if not os.path.exists(outPathClip):
+            clipRaster(outPathReproject, outPathClip, ROIDataJson, ROICRS)
 
-                    # Ajouter la donnée à la liste.
-                    addRastertoRasters(outPathClip, rasters)
+        # Si un raster rééchantillonné n'existe pas.
+        if not os.path.exists(outPathResample):
+            # Extraire les dimensions d'un pixel.
+            width, height = getPixelSize(outPathClip)
 
-            else:
-                if not os.path.exists(outPathClip):
-                    # Découper le fichier.
-                    clipRaster(outPath, outPathClip, ROIDataJson, ROICRS)
+            # Si le pixel est carré.
+            if width == height:
+                resampleRaster(outPathClip, outPathResample, width, pixelSize)
 
-                    # Ajouter la donnée à la liste.
-                    addRastertoRasters(outPathClip, rasters)
-
-        # Si le fichier existe.
-        else:
-            # Extraire le code EPSG de la donnée téléchargée.
-            rasterCRS, rasterCRSStr = extractEPSGRaster(outPath)
-
-            # Si la projection n'est pas la même que celle de la région d'intérêt.
-            if rasterCRS != ROICRS:
-                if not os.path.exists(outPathReproject):
-                    # Reprojeter la donnée.
-                    reprojectRaster(outPath, outPathReproject, ROICRSStr)
-
-                if not os.path.exists(outPathClip):
-                    # Découper le fichier.
-                    clipRaster(outPathReproject, outPathClip, ROIDataJson, ROICRS)
-
-                    # Ajouter la donnée à la liste.
-                    addRastertoRasters(outPathClip, rasters)
-
-            else:
-                if not os.path.exists(outPathClip):
-                    # Découper le fichier.
-                    clipRaster(outPath, ROIDataJson, ROICRS)
-
-                    # Ajouter la donnée à la liste.
-                    addRastertoRasters(outPath.replace(".", "_clip."), rasters)
+        # Ajouter la donnée à la liste.
+        rasters.append(outPathResample)
 
 if __name__ == "__main__":
     main()
