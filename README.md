@@ -2,7 +2,7 @@
 
 #### Comment cloner ce projet
 1. Télécharger Git à l'adresse suivante https://git-scm.com/.
-2. Créer un répertoire à l'endroit voulu sur le disquede l'ordinateur.
+2. Créer un répertoire à l'endroit voulu sur le disque de l'ordinateur.
 3. Cliquer-droit sur le répertoire et sélectionner *Git Bash Here*.
 4. Taper "git clone https://github.com/ElodieTL/LymeProjet.git" dans la fenêtre de commande. Le projet sera entièrement copié dans un répertoire nommé *LymeProjet*.
 
