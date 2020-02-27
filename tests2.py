@@ -25,6 +25,7 @@ import requests
 # dataCRS: entier représentant le code EPSG de la projection utilisée (#).
 # dataCRSStr: String représentant le code EPSG de la projection utilisée (EPSG:#).
 def extractEPSGVector(data):
+
     # Extraire le code EPSG (la projection) de la zone d'intérêt.
     dataCRS = re.search('epsg:(.*)', data.crs["init"])
 
@@ -120,6 +121,17 @@ def reprojectRaster(inPath, outPath, dstCRS):
             for i in range(1, src.count + 1):
                 reproject(source = rio.band(src, i), destination = rio.band(dst, i), src_transform = src.transform, src_crs = src.crs, dst_transform = transform, dst_crs = dst_crs, resampling = Resampling.nearest)
 
+# Fonction permettant de reprojeter un fichier de type shp.
+# data: Fichier shp entrant.
+# outPath: String représentant le chemin vers le fichier shp sortant.
+# dstCrs: String représentant le code EPSG de la projection voulue (EPSG:#).
+def reprojectShp(data, outPath, dstCRS):
+    fileName = os.path.basename(outPath)
+    print("Reprojecting: " + fileName + "...")
+
+    data_reproject = data.to_crs(dstCRS)
+    data_reproject.to_file(outPath)
+
 # Fonction permettant d'ouvrir un raster et de l'ajouter à une liste de rasters ouverts.
 # inPath: String représentant le chemin vers le fichier raster entrant.
 # rasters: List de rasters ouverts.
@@ -159,6 +171,24 @@ def clipRaster(inPath, outPath, clipPoly, epsgROI):
     # Exporter le raster résultant.
     with rio.open(outPath, "w", **outMeta) as dest:
         dest.write(outRaster)
+
+# Fonction permettant de découper un shp selon une région d'intérêt.
+# inPath: String représentant le chemin vers le fichier shp entrant.
+# outPath: String représentant le chemin vers le fichier shp sortant.
+# clipPoly: objet de type json représentant le polygone servant au découpage.
+# epsgROI: int représentant le code EPSG de la projection voulue (#).
+def clipShp(inPath, outPath, clipPoly, epsgROI):
+    fileName = os.path.basename(inPath)
+    print("Clipping raster " + fileName + "...")
+
+    # Ouvrir le shp.
+    shp = gpd.read_file(inPath)
+
+    # Découper le shp
+    shp_clipped = gpd.clip(shp, clipPoly)
+
+    # Exporter le raster résultant.
+    shp_clipped.to_file(outPath)
 
 # Fonction permettant d'extraire la hauteur et la largeur d'un pixel pour un raster.
 # inPath: String représentant le chemin vers le fichier raster entrant.
@@ -289,7 +319,6 @@ def main():
         # Obtenir la liste de tous les fichiers shapefile des milieux humides
         filenames = [f for f in os.listdir(ZhumideDir) if f.endswith('.shp')]
 
-
         for file in filenames:
             outPath = os.path.join(ZhumideDir, file)
             outPathReproject = outPath.replace(".", "_reproject.")
@@ -297,28 +326,29 @@ def main():
             outPathResample = outPath.replace(".", "_resample_" + str(pixelSize) + ".")
 
             # Extraire le code EPSG de la donnée téléchargée.
-            #dataCRS, dataCRSStr = extractEPSGVector(outPath)    Ça fonctionne pas...
-            #print(dataCRS,dataCRSStr)
-        """ 
-        # Si la projection n'est pas la même que celle de la région d'intérêt et qu'un raster reprojeté n'existe pas.
-        if rasterCRS != ROICRS and not os.path.exists(outPathReproject):
-            reprojectRaster(outPath, outPathReproject, ROICRSStr)
+            data = gpd.read_file(outPath)
+            dataCRS, dataCRSStr = extractEPSGVector(data)
 
-        # Si un raster découpé n'existe pas.
-        if not os.path.exists(outPathClip):
-            clipRaster(outPathReproject, outPathClip, ROIDataJson, ROICRS)
+            # Si la projection n'est pas la même que celle de la région d'intérêt et qu'un shp reprojeté n'existe pas.
+            if dataCRS != ROICRS and not os.path.exists(outPathReproject):
+                reprojectShp(data, outPathReproject, ROICRSStr)
 
-        # Si un raster rééchantillonné n'existe pas.
-        if not os.path.exists(outPathResample):
-            # Extraire les dimensions d'un pixel.
-            width, height = getPixelSize(outPathClip)
+            # Si un shp découpé n'existe pas.
+            if not os.path.exists(outPathClip):
+                clipShp(outPathReproject, outPathClip, ROIDataJson, ROICRS)
 
-            # Si le pixel est carré.
-            if width == height:
-                resampleRaster(outPathClip, outPathResample, width, pixelSize)
-
-        # Ajouter la donnée à la liste.
-        rasters.append(outPathResample)
+            """ 
+            # Si un raster rééchantillonné n'existe pas.
+            if not os.path.exists(outPathResample):
+                # Extraire les dimensions d'un pixel.
+                width, height = getPixelSize(outPathClip)
+    
+                # Si le pixel est carré.
+                if width == height:
+                    resampleRaster(outPathClip, outPathResample, width, pixelSize)
+    
+            # Ajouter la donnée à la liste.
+            rasters.append(outPathResample)
  """
 
 if __name__ == "__main__":
