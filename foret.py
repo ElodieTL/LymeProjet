@@ -47,20 +47,23 @@ conifere = conifere.astype(float)
 
 
 checkForet = np.greater(inconnu, 50)
-pasforet = np.where ( checkForet, inconnu , 0 )
-
+pasforet = np.where ( checkForet, inconnu , 0 )   # si ce n'est pas de la foret la valeur est de 0
 
 np.seterr(divide='ignore', invalid='ignore')
 
-check = np.logical_and ( conifere/feuillu > 0.8, conifere/feuillu < 1.2)
+check = np.logical_and ( conifere/feuillu > 0.8, conifere/feuillu < 1.2, pasforet != 0)
 
-mixte = np.where ( check, pasforet , 50 )
+mixte = np.where ( check, pasforet , 50 )   # si c'est une forêt mixte la valeur est de 50
 
-coniferew = np.where ( conifere > feuillu, mixte , 100 )
+checkConifere = np.logical_or ( conifere > feuillu, pasforet != 0, pasforet != 50)
 
-check3 = np.logical_and ( conifere < feuillu , coniferew != 50, coniferew != 0)
+conifereC = np.where ( checkConifere, mixte , 100 )  # si c'est un conifere la valeur est de 100
 
-feuilluw = np.where ( check3, coniferew , 200 )
+check3 = np.logical_or ( conifere < feuillu , conifereC != 50, conifereC != 0)
 
-ep.plot_bands(coniferew)
+feuilluw = np.where ( check3, conifereC , 200 )
+
+
+ep.plot_bands(feuilluw)
+#ep.plot_bands(coniferew)
 plt.show()
