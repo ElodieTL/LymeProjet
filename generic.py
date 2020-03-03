@@ -19,6 +19,7 @@ from zipfile import ZipFile
 import io
 from io import StringIO
 import requests
+import earthpy as et
 
 # Fonction permettant d'extraire le code EPSG (la projection) d'une donnée vectorielle.
 # data: objet geopandas représentant la donnée vectorielle.
@@ -26,7 +27,7 @@ import requests
 # dataCRSStr: String représentant le code EPSG de la projection utilisée (EPSG:#).
 def extractEPSGVector(data):
     # Extraire le code EPSG (la projection) de la zone d'intérêt.
-    dataCRS = re.search('epsg:(.*)', data.crs["init"])
+    dataCRS = re.search('epsg:(.*)', str(data.crs))
 
     # Si une projection existe, extraire le code numérique et un String pour d'autres fonctions.
     if dataCRS is not None:
@@ -71,9 +72,9 @@ def listRasterFiles(inDir):
 # Fonction permettant de télécharger des données (au format .zip ou non) provenant d'un serveur ou d'un site web.
 # url: String représentant l'adresse URL complète de la donnée à télécharger (.ZIP).
 # outPath: String représentant le chemin du fichier sortant.
-# pathDir: String représentant le chemin des fichiers dé-zippés
-# zip: Boolean représentant si les données à télécharger sont contenues dans un fichier .zip.
-def downloadData(url, outPath, pathDir = "", zip = false):
+# pathDir: String représentant le chemin des fichiers dé-zippés (facultatif).
+# zip: Boolean représentant si les données à télécharger sont contenues dans un fichier .zip (facultatif).
+def downloadData(url, outPath, pathDir = "", zip = False):
     fileName = os.path.basename(url)
 
     print("Downloading " + fileName + "...")
@@ -156,12 +157,32 @@ def clipRaster(inPath, outPath, clipPoly, epsgROI):
     with rio.open(outPath, "w", **outMeta) as dest:
         dest.write(outRaster)
 
+# Fonction permettant de découper un fichier de forme selon une région d'intérêt.
+# inPath: String représentant le chemin vers le fichier shp entrant.
+# outPath: String représentant le chemin vers le fichier shp sortant.
+# clipPoly: objet de type geopandas servant au découpage.
+def clipShp(inPath, outPath, clipPoly):
+    fileName = os.path.basename(inPath)
+    print("Clipping shapefile " + fileName + "...")
+
+    # Ouvrir le fichier.
+    shp = gpd.read_file(inPath)
+
+    # Appliquer un buffer nul (pour gérer les géométries invalides, au besoin).
+    shp['geometry'] = shp.geometry.buffer(0)
+
+    # Découper le shp
+    shpClipped = gpd.clip(shp, clipPoly)
+
+    # Exporter le raster résultant.
+    shpClipped.to_file(outPath)
+
 # Fonction permettant d'extraire la hauteur et la largeur d'un pixel pour un raster.
 # inPath: String représentant le chemin vers le fichier raster entrant.
 # width: largeur d'un pixel.
 # height: hauteur d'un pixel.
 def getPixelSize(inPath):
-    # Ouvir le raster
+    # Ouvrir le raster
     raster = rio.open(inPath)
 
     # Extraire la largeur et la hauteur d'un pixel.
