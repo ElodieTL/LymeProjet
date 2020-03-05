@@ -32,11 +32,11 @@ fpunknow = os.path.join(data_dir, "NFI_MODIS250m_2011_kNN_SpeciesGroups_Unknown_
 file_list = [fpfeuillu, fpconifere, fpunknow]
 
 # Fusionner les rasters
-es.stack(file_list, "X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données/foret.tif")
+es.stack(file_list, "X:\ELTAL8/foret.tif")
 
 # bande 0 = inconnu bande 1 = feuillu bande 2 = conifère
 
-img_file = 'X:\ELTAL8\eforet.tif'
+img_file = 'X:\ELTAL8/foret.tif'
 img = cv2.imread(img_file, cv2.IMREAD_UNCHANGED)           # rgb
 rows, cols = img.shape[:2]
 
@@ -65,7 +65,7 @@ for i in range(rows):
 # Feuillu = 200 conifère = 125 pas foret = 0 mixte = 75
 
 
-window_name = 'Déterminants forêt'
+window_name = 'image'
 cv2.imshow(window_name, img2)
 
 cv2.waitKey(0)
