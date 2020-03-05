@@ -5,7 +5,11 @@ def main():
     pixelSize = 30
 
     # Importer et lire les données du shapelefile représentant la zone d'intérêt.
+<<<<<<< HEAD
     ROIPath = "X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2/ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
+=======
+    ROIPath = "Z:\GALAL35\Projet_lyme\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
+>>>>>>> f57af0c1d14442edaec12f4e1175c72ead330339
     ROIData = gpd.read_file(ROIPath)
 
     # Transformer en format json
@@ -18,9 +22,15 @@ def main():
     rasters = [] # Créer une liste vide qui contiendra les rasters téléchargés.
 
     # Répertoire où les données seront enregistrées.
+<<<<<<< HEAD
     foretsDir = r"X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données\Forêt"
     zonesHumidesDir = r"X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données\Zones humides"
     eauDir = r"X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données\Eau"
+=======
+
+    foretsDir = r"Z:\GALAL35\Projet_lyme\Données\Forêt"
+    zonesHumidesDir = r"Z:\GALAL35\Projet_lyme\Données\Zone Humide"
+>>>>>>> f57af0c1d14442edaec12f4e1175c72ead330339
 
     # Liste de liens menant aux données.
     urlListF = [
@@ -94,7 +104,7 @@ def main():
             outPath = os.path.join(zonesHumidesDir, file)
             outPathReproject = outPath.replace(".", "_reproject.")
             outPathClip = outPath.replace(".", "_clip.")
-            outPathResample = outPath.replace(".", "_resample_" + str(pixelSize) + ".")
+            outPathResample = outPath.replace(".shp", "_resample_" + str(pixelSize) + ".tiff")
 
             # Extraire le code EPSG de la donnée téléchargée.
             data = gpd.read_file(outPath)
@@ -107,6 +117,10 @@ def main():
             # Si un shp découpé n'existe pas.
             if not os.path.exists(outPathClip):
                 clipShp(outPathReproject, outPathClip, ROIData)
+
+            # Si le shp n'est pas rasterisé
+            if not os.path.exists(outPathResample):
+                rasterizingShp(outPathClip,outPathResample,pixelSize, ROICRS)
 
             """ 
             # Si un raster rééchantillonné n'existe pas.

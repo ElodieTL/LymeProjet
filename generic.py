@@ -10,7 +10,6 @@ from rasterio.merge import merge
 from rasterio.mask import mask
 from rasterio.plot import show
 from rasterio.warp import calculate_default_transform, reproject, Resampling
-import gdal
 import matplotlib.pyplot as plt
 import gdal
 import matplotlib.pyplot as plt
@@ -20,6 +19,7 @@ import io
 from io import StringIO
 import requests
 import earthpy as et
+from osgeo import ogr
 
 # Fonction permettant d'extraire le code EPSG (la projection) d'une donnée vectorielle.
 # data: objet geopandas représentant la donnée vectorielle.
@@ -217,3 +217,69 @@ def resampleRaster(inPath, outPath, inPixelSize, outPixelSize):
     # Exporter le raster résultant.
     with rio.open(outPath, 'w', **meta) as dst:
         dst.write(data)
+
+# Fonction permettant rasteriser un shp.
+# inPath: String représentant le chemin vers le fichier shp entrant.
+# outPath: String représentant le chemin vers le fichier raster sortant.
+# PixelSize: largeur/hauteur d'un pixel du raster sortant
+def rasterizingShp(inPath, outPath, PixelSize, CRS):
+    NoData_value = -9999
+
+    #Ouverture du fichier shp et lecture des attributs
+    shpData = ogr.Open(inPath)
+    shpLayer = shpData.GetLayer()
+    shpSrs = shpLayer.GetSpatialRef()
+    x_min, x_max, y_min, y_max = shpLayer.GetExtent()
+    #https://gis.stackexchange.com/questions/221718/rasterizing-shapefile-with-attribute-value-as-pixel-value-with-gdal-in-python
+
+    #Création des données du fichier de destination
+    x_res = int((x_max - x_min) / PixelSize)
+    y_res = int((y_max - y_min) / PixelSize)
+    target_ds = gdal.GetDriverByName('GTiff').Create(outPath, x_res, y_res, gdal.GDT_Byte)
+    target_ds.SetGeoTransform((x_min, PixelSize, 0, y_max, 0, -PixelSize))
+    band = target_ds.GetRasterBand(1)
+    band.SetNoDataValue(NoData_value)
+
+    # Rasterizer
+    gdal.RasterizeLayer(target_ds, [1], shpLayer, burn_values=[1])
+    target_ds = None
+
+    # Read as array
+    array = band.ReadAsArray()
+
+    # Mettre à jour les métadonnées.
+    outMeta = array.meta.copy()
+    outMeta.update({"driver": "GTiff", "height": array.shape[1], "width": array.shape[2], "crs": pycrs.parse.from_epsg_code(CRS).to_proj4()})
+    print(outMeta)
+    # Exporter en raster
+    #array.to_file(outPath)
+
+    # Exporter le raster résultant.
+    with rio.open(outPath, "w", **outMeta) as dest:
+        dest.write(array)
+    """"
+    ndsm = '/home/zeito/pyqgis_data/utah_demUTM2.tif'
+    shp = '/home/zeito/pyqgis_data/polygon8.shp'
+    data = gdal.Open(ndsm, gdalconst.GA_ReadOnly)
+    geo_transform = data.GetGeoTransform()
+    # source_layer = data.GetLayer()
+    x_min = geo_transform[0]
+    y_max = geo_transform[3]
+    x_max = x_min + geo_transform[1] * data.RasterXSize
+    y_min = y_max + geo_transform[5] * data.RasterYSize
+    x_res = data.RasterXSize
+    y_res = data.RasterYSize
+    mb_v = ogr.Open(shp)
+    mb_l = mb_v.GetLayer()
+    pixel_width = geo_transform[1]
+    output = '/home/zeito/pyqgis_data/my.tif'
+    target_ds = gdal.GetDriverByName('GTiff').Create(output, x_res, y_res, 1, gdal.GDT_Byte)
+    target_ds.SetGeoTransform((x_min, pixel_width, 0, y_min, 0, pixel_width))
+    band = target_ds.GetRasterBand(1)
+    NoData_value = -999999
+    band.SetNoDataValue(NoData_value)
+    band.FlushCache()
+    gdal.RasterizeLayer(target_ds, [1], mb_l, options=["ATTRIBUTE=hedgerow"])
+
+    target_ds = None
+    """
