@@ -34,7 +34,7 @@ file_list = [fpfeuillu, fpconifere, fpunknow]
 # Fusionner les rasters
 es.stack(file_list, "X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données/foret.tif")
 
-
+# bande 0 = inconnu bande 1 = feuillu bande 2 = conifère
 
 img_file = 'X:\ELTAL8\eforet.tif'
 img = cv2.imread(img_file, cv2.IMREAD_UNCHANGED)           # rgb
@@ -51,22 +51,21 @@ for i in range(rows):
         if (img[i,j,0] > 50):
                 img2[i, j] = 0
 
-        elif (img[i,j,0] > 0):
-            if (img[i,j,1] / img[i,j,0] > 0.6 and img[i,j,1] / img[i,j,0] < 1.4):
-                img2[i,j] = 75
+        elif (img[i,j,2] > 0 and img[i,j,1] / img[i,j,2] > 0.7 and img[i,j,1] / img[i,j,2] < 1.3):
+            img2[i,j] = 75
 
-            elif (img[i,j,0] > img[i,j,1]):
-                 img2[i, j] = 125
+        elif (img[i,j,2] < img[i,j,1]):
+             img2[i, j] = 200
 
-            elif (img[i,j,0] < img[i,j,1]):
-                img2[i, j] = 200
-
+        elif (img[i,j,2] > img[i,j,1]):
+             img2[i, j] = 125
 
 
-# Window name in which image is displayed
-window_name = 'image'
 
-# Using cv2.imshow() method
-# Displaying the image
+# Feuillu = 200 conifère = 125 pas foret = 0 mixte = 75
+
+
+window_name = 'Déterminants forêt'
 cv2.imshow(window_name, img2)
+
 cv2.waitKey(0)
