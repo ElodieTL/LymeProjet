@@ -21,3 +21,9 @@ Note: La taille maximale d'un fichier téléversé est de 100 Mo.
 #### Comment vérifier le statut du dossier *LymeProjet*
 1. Cliquer-droit sur le répertoire *LymeProjet* et sélectionner *Git Bash Here*.
 2. Taper `git status` afin de voir quel(s) fichier(s) a (ont) été ajouté(s) a l'aide de l'appel `git add`.
+
+#### Comment installer un environnement
+1. Déposer le fichier .yml dans le répertoire où se trouve le dossier Anaconda3.
+2. Dans la console Anaconda, taper `conda env create -f <nom>.yml`
+3. Pour activer l'environnement, taper `conda activate <env>`.
+
