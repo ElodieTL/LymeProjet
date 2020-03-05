@@ -18,9 +18,10 @@ from rasterio.warp import calculate_default_transform, reproject, Resampling
 import gdal
 import earthpy.spatial as es
 import earthpy.plot as ep
+import cv2
 
 # Data dir
-data_dir = "Z:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données\Forêt"
+data_dir = "X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données\Forêt"
 
 # Filepath
 fpfeuillu = os.path.join(data_dir, "NFI_MODIS250m_2011_kNN_SpeciesGroups_Broadleaf_Spp_v1_clip.tif")
@@ -31,39 +32,40 @@ fpunknow = os.path.join(data_dir, "NFI_MODIS250m_2011_kNN_SpeciesGroups_Unknown_
 file_list = [fpfeuillu, fpconifere, fpunknow]
 
 # Fusionner les rasters
-es.stack(file_list, "Z:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données/foret.tif")
+es.stack(file_list, "X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données/foret.tif")
 
-# Lire les différentes bandes
-RasterForet = rio.open("Z:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données/foret.tif")
+# bande 0 = inconnu bande 1 = feuillu bande 2 = conifère
 
-feuillu = RasterForet.read(1)
-conifere = RasterForet.read(2)
-inconnu = RasterForet.read(3)
+img_file = 'X:\ELTAL8\eforet.tif'
+img = cv2.imread(img_file, cv2.IMREAD_UNCHANGED)           # rgb
+rows, cols = img.shape[:2]
 
-# Convertir en float
-feuillu = feuillu.astype(float)
-inconnu = inconnu.astype(float)
-conifere = conifere.astype(float)
+img2 = np.ones((rows, cols,1),np.uint8)*255
 
 
-checkForet = np.greater(inconnu, 50)
-pasforet = np.where ( checkForet, inconnu , 0 )   # si ce n'est pas de la foret la valeur est de 0
+for i in range(rows):
+    for j in range(cols):
+        if (img[i,j,0] == 0 and img[i,j,1] == 0 and img[i,j,2] == 0) :
+            img2[i,j] = 0
 
-np.seterr(divide='ignore', invalid='ignore')
+        if (img[i,j,0] > 50):
+                img2[i, j] = 0
 
-check = np.logical_and ( conifere/feuillu > 0.8, conifere/feuillu < 1.2, pasforet != 0)
+        elif (img[i,j,2] > 0 and img[i,j,1] / img[i,j,2] > 0.7 and img[i,j,1] / img[i,j,2] < 1.3):
+            img2[i,j] = 75
 
-mixte = np.where ( check, pasforet , 50 )   # si c'est une forêt mixte la valeur est de 50
+        elif (img[i,j,2] < img[i,j,1]):
+             img2[i, j] = 200
 
-checkConifere = np.logical_or ( conifere > feuillu, pasforet != 0, pasforet != 50)
-
-conifereC = np.where ( checkConifere, mixte , 100 )  # si c'est un conifere la valeur est de 100
-
-check3 = np.logical_or ( conifere < feuillu , conifereC != 50, conifereC != 0)
-
-feuilluw = np.where ( check3, conifereC , 200 )
+        elif (img[i,j,2] > img[i,j,1]):
+             img2[i, j] = 125
 
 
-ep.plot_bands(feuilluw)
-#ep.plot_bands(coniferew)
-plt.show()
+
+# Feuillu = 200 conifère = 125 pas foret = 0 mixte = 75
+
+
+window_name = 'Déterminants forêt'
+cv2.imshow(window_name, img2)
+
+cv2.waitKey(0)
