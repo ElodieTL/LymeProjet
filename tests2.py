@@ -18,14 +18,11 @@ import io
 from io import StringIO
 import requests
 
-
-
 # Fonction permettant d'extraire le code EPSG (la projection) d'une donnée vectorielle.
 # data: objet geopandas représentant la donnée vectorielle.
 # dataCRS: entier représentant le code EPSG de la projection utilisée (#).
 # dataCRSStr: String représentant le code EPSG de la projection utilisée (EPSG:#).
 def extractEPSGVector(data):
-
     # Extraire le code EPSG (la projection) de la zone d'intérêt.
     dataCRS = re.search('epsg:(.*)', data.crs["init"])
 
@@ -90,7 +87,7 @@ def downloadDataZIP(url, outPath, pathDir):
 
     with ZipFile(outPath, 'r') as zipObj:
         print("Unzip " + fileName + " ...")
-        zipObj.extractall(pathDir)
+        zipObj.extractall(pathDir)##
 
     """ Autre méthode qui ne télécharge par le fichier zip, crée problème...donc méthode mise de coté
     r = requests.get(url)
