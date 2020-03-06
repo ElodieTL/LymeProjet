@@ -45,4 +45,3 @@ def Parc(pixelSize, ROICRSStr, ROICRS, ROIData):
             # Si le shp n'est pas rasterisé
             if not os.path.exists(outPathResample):
                 rasterizingShp(outPathClip, outPathResample, pixelSize, ROICRS)
-            
