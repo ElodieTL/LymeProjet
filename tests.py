@@ -5,11 +5,9 @@ def main():
     pixelSize = 30
 
     # Importer et lire les données du shapelefile représentant la zone d'intérêt.
-<<<<<<< HEAD
     ROIPath = "X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2/ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
-=======
+
     ROIPath = "Z:\GALAL35\Projet_lyme\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
->>>>>>> f57af0c1d14442edaec12f4e1175c72ead330339
     ROIData = gpd.read_file(ROIPath)
 
     # Transformer en format json
@@ -22,15 +20,12 @@ def main():
     rasters = [] # Créer une liste vide qui contiendra les rasters téléchargés.
 
     # Répertoire où les données seront enregistrées.
-<<<<<<< HEAD
     foretsDir = r"X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données\Forêt"
     zonesHumidesDir = r"X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données\Zones humides"
     eauDir = r"X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données\Eau"
-=======
 
     foretsDir = r"Z:\GALAL35\Projet_lyme\Données\Forêt"
     zonesHumidesDir = r"Z:\GALAL35\Projet_lyme\Données\Zone Humide"
->>>>>>> f57af0c1d14442edaec12f4e1175c72ead330339
 
     # Liste de liens menant aux données.
     urlListF = [
@@ -44,15 +39,10 @@ def main():
     urlListEau = [
         "http://ftp.geogratis.gc.ca/pub/nrcan_rncan/vector/canvec/shp/Hydro/canvec_250K_QC_Hydro_shp.zip"]
 
-    # Créer un répertoire s'il n'existe pas.
-    if not os.path.exists(foretsDir):
-        os.makedirs(foretsDir)
-
-    if not os.path.exists(zonesHumidesDir):
-        os.makedirs(zonesHumidesDir)
-
-    if not os.path.exists(eauDir):
-        os.makedirs(eauDir)
+    # Créer des répertoires s'ils n'existent pas.
+    createDir(foretsDir)
+    createDir(zonesHumidesDir)
+    createDir(eauDir)
 
     # Pour chaque lien de la liste
     for url in urlListF:

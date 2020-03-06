@@ -75,6 +75,26 @@ def createDir(inDir):
     if not os.path.exists(inDir):
         os.makedirs(inDir)
 
+# Fonction permettant de créer les noms de fichiers nécessaires au processus.
+# inDir: String représentant le répertoire contenant les fichiers créés.
+# baseName: String représentant le nom du fichier de base.
+# pixelSize: largeur/hauteur d'un pixel d'un raster rééchantillonné.
+# rasterise: Boolean représentant si un fichier sera rasterisé au cours du traitement.
+def createPaths(inDir, baseName, pixelSize, rasterise = False):
+    outPath = os.path.join(inDir, baseName)
+    outPathReproject = outPath.replace(".", "_reproject.")
+    outPathClip = outPath.replace(".", "_clip.")
+    if rasterise:
+        outPathRaster = outPath.replace(".shp", ".tiff")
+        outPathResample = outPath.replace(".shp", "_resample_" + str(pixelSize) + ".tiff")
+
+        return outPath, outPathReproject, outPathClip, outPathRaster, outPathResample
+
+    else:
+        outPathResample = outPath.replace(".", "_resample_" + str(pixelSize) + ".")
+
+        return outPath, outPathReproject, outPathClip, outPathResample
+
 # Fonction permettant de télécharger des données (au format .zip ou non) provenant d'un serveur ou d'un site web.
 # url: String représentant l'adresse URL complète de la donnée à télécharger (.ZIP).
 # outPath: String représentant le chemin du fichier sortant.
@@ -229,7 +249,10 @@ def resampleRaster(inPath, outPath, inPixelSize, outPixelSize):
 # outPath: String représentant le chemin vers le fichier raster sortant.
 # pixelSize: largeur/hauteur d'un pixel du raster sortant.
 # CRS : String représentant le code EPSG de la projection voulue (#).
-def rasterizingShp(inPath, outPath, pixelSize, CRS):
+def rasteriseShp(inPath, outPath, pixelSize, CRS):
+    fileName = os.path.basename(inPath)
+    print("Rasterising " + fileName + "...")
+
     NoData_value = -9999
     CRSint = int(CRS)
 
