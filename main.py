@@ -1,4 +1,7 @@
 from generic import *
+from ZoneHumide import *
+from detForet import *
+from park import *
 
 def main():
     # Dimension d'un pixel pour un raster.
@@ -6,8 +9,8 @@ def main():
 
     # Importer et lire les données du shapelefile représentant la zone d'intérêt.
     # ROIPath = "X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2/ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
-    # ROIPath = "Z:\GALAL35\Projet_lyme\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
-    ROIPath = "Z:\MALAM357\GMT-3051 Projet en génie géomatique II\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
+    ROIPath = "Z:\GALAL35\Projet_lyme\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
+    #ROIPath = "Z:\MALAM357\GMT-3051 Projet en génie géomatique II\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
     ROIData = gpd.read_file(ROIPath)
 
     # Transformer en format json
@@ -20,108 +23,30 @@ def main():
     rasters = [] # Créer une liste vide qui contiendra les rasters téléchargés.
 
     # Répertoires où les données seront enregistrées.
-    # foretsDir = r"X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données\Forêt"
-    # zonesHumidesDir = r"X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données\Zones humides"
     # eauDir = r"X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données\Eau"
-
-    # foretsDir = r"Z:\GALAL35\Projet_lyme\Données\Forêt"
-    # zonesHumidesDir = r"Z:\GALAL35\Projet_lyme\Données\Zone Humide"
-
-    foretsDir = r"Z:\MALAM357\GMT-3051 Projet en génie géomatique II\Donnees\Foret"
-    zonesHumidesDir = r"Z:\MALAM357\GMT-3051 Projet en génie géomatique II\Donnees\Zones humides"
-    eauDir = r"Z:\MALAM357\GMT-3051 Projet en génie géomatique II\Donnees\Eau"
+    eauDir = r"Z:\GALAL35\Projet_lyme\Donnees\Eau"
+    #eauDir = r"Z:\MALAM357\GMT-3051 Projet en génie géomatique II\Donnees\Eau"
 
     # Liste de liens menant aux données.
-    urlListF = [
-        "http://ftp.geogratis.gc.ca/pub/nrcan_rncan/Forests_Foret/canada-forests-attributes_attributs-forests-canada/2011-attributes_attributs-2011/NFI_MODIS250m_2011_kNN_SpeciesGroups_Broadleaf_Spp_v1.tif",
-        "http://ftp.geogratis.gc.ca/pub/nrcan_rncan/Forests_Foret/canada-forests-attributes_attributs-forests-canada/2011-attributes_attributs-2011/NFI_MODIS250m_2011_kNN_SpeciesGroups_Needleleaf_Spp_v1.tif",
-        "http://ftp.geogratis.gc.ca/pub/nrcan_rncan/Forests_Foret/canada-forests-attributes_attributs-forests-canada/2011-attributes_attributs-2011/NFI_MODIS250m_2011_kNN_SpeciesGroups_Unknown_Spp_v1.tif"]
-
-    urlListZH = [
-        "https://www.donneesquebec.ca/recherche/fr/dataset/eafec419-d67d-449e-a157-d22230314d36/resource/c95e97fe-77cb-49f2-822d-c45067b6a190/download/mh2019shp.zip"]
-
     urlListEau = [
         "http://ftp.geogratis.gc.ca/pub/nrcan_rncan/vector/canvec/shp/Hydro/canvec_250K_QC_Hydro_shp.zip"]
 
     # Créer des répertoires s'ils n'existent pas.
-    createDir(foretsDir)
-    createDir(zonesHumidesDir)
     createDir(eauDir)
 
-    # Pour chaque lien de la liste
-    for url in urlListF:
-        # Spécifier les liens vers les fichiers de sortie.
-        outPath, outPathReproject, outPathClip, outPathResample = createPaths(foretsDir, os.path.basename(url), pixelSize)
+    """ Traitement des données pour le déterminant Foret"""
+    #Foret_raster = Foret(pixelSize, ROICRSStr, ROICRS, ROIData, ROIDataJson)
+    #rasters.append(Foret_raster)
 
-        # Si le fichier raster d'origine n'existe pas.
-        if not os.path.exists(outPath):
-            downloadData(url, outPath)
+    """ Traitement des données pour le déterminant Zone humide"""
+    #ZH_raster = ZoneHumide(pixelSize, ROICRSStr, ROICRS, ROIData)
+    #rasters.append(ZH_raster)
 
-        # Extraire le code EPSG de la donnée téléchargée.
-        rasterCRS, rasterCRSStr = extractEPSGRaster(outPath)
+    """ Traitement des données pour le déterminant Parc"""
+    Parc_raster = Parc(pixelSize, ROICRSStr, ROICRS, ROIData)
+    rasters.append(Parc_raster)
 
-        # Si la projection n'est pas la même que celle de la région d'intérêt et qu'un raster reprojeté n'existe pas.
-        if rasterCRS != ROICRS and not os.path.exists(outPathReproject):
-            reprojectRaster(outPath, outPathReproject, ROICRSStr)
-
-        # Si un raster découpé n'existe pas.
-        if not os.path.exists(outPathClip):
-            clipRaster(outPathReproject, outPathClip, ROIDataJson, ROICRS)
-
-        # Si un raster rééchantillonné n'existe pas.
-        if not os.path.exists(outPathResample):
-            # Extraire les dimensions d'un pixel.
-            width, height = getPixelSize(outPathClip)
-
-            # Si le pixel est carré.
-            if width == height:
-                resampleRaster(outPathClip, outPathResample, width, pixelSize)
-
-        # Ajouter la donnée à la liste.
-        rasters.append(outPathResample)
-
-    for url in urlListZH:
-        # Spécifier les liens vers les fichiers de sortie.
-        outPath = os.path.join(zonesHumidesDir, os.path.basename(url))
-
-        # Si le fichier vectoriel d'origine n'existe pas.
-        if not os.path.exists(outPath):
-            downloadData(url, outPath, zonesHumidesDir, True)
-
-        # Obtenir la liste de tous les fichiers shapefile des milieux humides
-        fileNames = [file for file in os.listdir(zonesHumidesDir) if file.endswith(".shp") and not file.endswith("reproject.shp") and not file.endswith("clip.shp") and not file.endswith("resample" + str(pixelSize) + ".shp")]
-
-        for file in fileNames:
-            outPath, outPathReproject, outPathClip, outPathRaster, outPathResample = createPaths(zonesHumidesDir, file, pixelSize, True)
-
-            # Extraire le code EPSG de la donnée téléchargée.
-            data = gpd.read_file(outPath)
-            dataCRS, dataCRSStr = extractEPSGVector(data)
-
-            # Si la projection n'est pas la même que celle de la région d'intérêt et qu'un shp reprojeté n'existe pas.
-            if dataCRS != ROICRS and not os.path.exists(outPathReproject):
-                reprojectShp(data, outPathReproject, ROICRSStr)
-
-            # Si un shp découpé n'existe pas.
-            if not os.path.exists(outPathClip):
-                clipShp(outPathReproject, outPathClip, ROIData)
-
-            # Si le .shp n'est pas rasterisé.
-            if not os.path.exists(outPathRaster):
-                rasteriseShp(outPathClip, outPathRaster, pixelSize, ROICRS)
-
-            # Si un raster rééchantillonné n'existe pas.
-            if not os.path.exists(outPathResample):
-                # Extraire les dimensions d'un pixel.
-                width, height = getPixelSize(outPathRaster)
-
-                # Si le pixel est carré.
-                if width == height:
-                    resampleRaster(outPathRaster, outPathResample, width, pixelSize)
-
-            # Ajouter la donnée à la liste.
-            rasters.append(outPathResample)
-
+    """
     for url in urlListEau:
         # Spécifier les liens vers les fichiers de sortie.
         outPath = os.path.join(eauDir, os.path.basename(url))
@@ -147,6 +72,6 @@ def main():
             # Si un .shp découpé n'existe pas.
             if not os.path.exists(outPathClip):
                 clipShp(outPathReproject, outPathClip, ROIData)
-
+    """
 if __name__ == "__main__":
     main()

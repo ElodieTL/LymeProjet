@@ -20,6 +20,7 @@ from io import StringIO
 import requests
 import earthpy as et
 from osgeo import ogr
+from pyunpack import Archive
 
 # Fonction permettant d'extraire le code EPSG (la projection) d'une donnée vectorielle.
 # data: objet geopandas représentant la donnée vectorielle.
@@ -86,9 +87,8 @@ def createPaths(inDir, baseName, pixelSize, rasterise = False):
     outPathClip = outPath.replace(".", "_clip.")
     if rasterise:
         outPathRaster = outPath.replace(".shp", ".tiff")
-        outPathResample = outPath.replace(".shp", "_resample_" + str(pixelSize) + ".tiff")
 
-        return outPath, outPathReproject, outPathClip, outPathRaster, outPathResample
+        return outPath, outPathReproject, outPathClip, outPathRaster
 
     else:
         outPathResample = outPath.replace(".", "_resample_" + str(pixelSize) + ".")
@@ -107,9 +107,12 @@ def downloadData(url, outPath, pathDir = "", zip = False):
     urllib.request.urlretrieve(url, outPath)
 
     if zip:
-        with ZipFile(outPath, 'r') as zipObj:
-            print("Unzipping " + fileName + "...")
-            zipObj.extractall(pathDir)
+        print("Unzipping " + fileName + "...")
+        Archive(outPath).extractall(pathDir)
+
+        #with ZipFile(outPath, 'r') as zipObj:
+            #print("Unzipping " + fileName + "...")
+            #zipObj.extractall(pathDir)
 
 # Fonction permettant de reprojeter un fichier de type raster.
 # inPath: String représentant le chemin vers le fichier raster entrant.
