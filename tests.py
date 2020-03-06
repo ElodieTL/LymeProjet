@@ -5,9 +5,9 @@ def main():
     pixelSize = 30
 
     # Importer et lire les données du shapelefile représentant la zone d'intérêt.
-    ROIPath = "X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2/ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
-
-    ROIPath = "Z:\GALAL35\Projet_lyme\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
+    # ROIPath = "X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2/ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
+    # ROIPath = "Z:\GALAL35\Projet_lyme\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
+    ROIPath = "Z:\MALAM357\GMT-3051 Projet en génie géomatique II\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
     ROIData = gpd.read_file(ROIPath)
 
     # Transformer en format json
@@ -19,13 +19,17 @@ def main():
     # Télécharger les données de forêt de NRCan
     rasters = [] # Créer une liste vide qui contiendra les rasters téléchargés.
 
-    # Répertoire où les données seront enregistrées.
-    foretsDir = r"X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données\Forêt"
-    zonesHumidesDir = r"X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données\Zones humides"
-    eauDir = r"X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données\Eau"
+    # Répertoires où les données seront enregistrées.
+    # foretsDir = r"X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données\Forêt"
+    # zonesHumidesDir = r"X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données\Zones humides"
+    # eauDir = r"X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données\Eau"
 
-    foretsDir = r"Z:\GALAL35\Projet_lyme\Données\Forêt"
-    zonesHumidesDir = r"Z:\GALAL35\Projet_lyme\Données\Zone Humide"
+    # foretsDir = r"Z:\GALAL35\Projet_lyme\Données\Forêt"
+    # zonesHumidesDir = r"Z:\GALAL35\Projet_lyme\Données\Zone Humide"
+
+    foretsDir = r"Z:\MALAM357\GMT-3051 Projet en génie géomatique II\Donnees\Foret"
+    zonesHumidesDir = r"Z:\MALAM357\GMT-3051 Projet en génie géomatique II\Donnees\Zones humides"
+    eauDir = r"Z:\MALAM357\GMT-3051 Projet en génie géomatique II\Donnees\Eau"
 
     # Liste de liens menant aux données.
     urlListF = [
@@ -47,10 +51,7 @@ def main():
     # Pour chaque lien de la liste
     for url in urlListF:
         # Spécifier les liens vers les fichiers de sortie.
-        outPath = os.path.join(foretsDir, os.path.basename(url))
-        outPathReproject = outPath.replace(".", "_reproject.")
-        outPathClip = outPath.replace(".", "_clip.")
-        outPathResample = outPath.replace(".", "_resample_" + str(pixelSize) + ".")
+        outPath, outPathReproject, outPathClip, outPathResample = createPaths(foretsDir, os.path.basename(url), pixelSize)
 
         # Si le fichier raster d'origine n'existe pas.
         if not os.path.exists(outPath):
@@ -88,13 +89,10 @@ def main():
             downloadData(url, outPath, zonesHumidesDir, True)
 
         # Obtenir la liste de tous les fichiers shapefile des milieux humides
-        fileNames = [file for file in os.listdir(zonesHumidesDir) if file.endswith('.shp') and not file.endswith('reproject.shp') and not file.endswith('clip.shp') and not file.endswith('resample' + str(pixelSize) + '.shp')]
+        fileNames = [file for file in os.listdir(zonesHumidesDir) if file.endswith(".shp") and not file.endswith("reproject.shp") and not file.endswith("clip.shp") and not file.endswith("resample" + str(pixelSize) + ".shp")]
 
         for file in fileNames:
-            outPath = os.path.join(zonesHumidesDir, file)
-            outPathReproject = outPath.replace(".", "_reproject.")
-            outPathClip = outPath.replace(".", "_clip.")
-            outPathResample = outPath.replace(".shp", "_resample_" + str(pixelSize) + ".tiff")
+            outPath, outPathReproject, outPathClip, outPathRaster, outPathResample = createPaths(zonesHumidesDir, file, pixelSize, True)
 
             # Extraire le code EPSG de la donnée téléchargée.
             data = gpd.read_file(outPath)
@@ -108,51 +106,47 @@ def main():
             if not os.path.exists(outPathClip):
                 clipShp(outPathReproject, outPathClip, ROIData)
 
-            # Si le shp n'est pas rasterisé
-            if not os.path.exists(outPathResample):
-                rasterizingShp(outPathClip,outPathResample,pixelSize, ROICRS)
+            # Si le .shp n'est pas rasterisé.
+            if not os.path.exists(outPathRaster):
+                rasteriseShp(outPathClip, outPathRaster, pixelSize, ROICRS)
 
-            """ 
             # Si un raster rééchantillonné n'existe pas.
             if not os.path.exists(outPathResample):
                 # Extraire les dimensions d'un pixel.
-                width, height = getPixelSize(outPathClip)
+                width, height = getPixelSize(outPathRaster)
 
                 # Si le pixel est carré.
                 if width == height:
-                    resampleRaster(outPathClip, outPathResample, width, pixelSize)
+                    resampleRaster(outPathRaster, outPathResample, width, pixelSize)
 
             # Ajouter la donnée à la liste.
-            rasters.append(outPathResample)"""
+            rasters.append(outPathResample)
 
-        for url in urlListEau:
-            # Spécifier les liens vers les fichiers de sortie.
-            outPath = os.path.join(eauDir, os.path.basename(url))
+    for url in urlListEau:
+        # Spécifier les liens vers les fichiers de sortie.
+        outPath = os.path.join(eauDir, os.path.basename(url))
 
-            # Si le fichier vectoriel d'origine n'existe pas.
-            if not os.path.exists(outPath):
-                downloadData(url, outPath, eauDir, True)
+        # Si le fichier vectoriel d'origine n'existe pas.
+        if not os.path.exists(outPath):
+            downloadData(url, outPath, eauDir, True)
 
-            # Obtenir la liste de tous les fichiers shapefile des milieux humides
-            fileNames = [file for file in os.listdir(eauDir) if file.endswith('.shp') and not file.endswith('reproject.shp') and not file.endswith('clip.shp') and not file.endswith('resample' + str(pixelSize) + '.shp')]
+        # Obtenir la liste de tous les fichiers shapefile des milieux humides
+        fileNames = [file for file in os.listdir(eauDir) if file.endswith(".shp") and not file.endswith("reproject.shp") and not file.endswith("clip.shp") and not file.endswith("resample" + str(pixelSize) + ".shp")]
 
-            for file in fileNames:
-                outPath = os.path.join(eauDir, file)
-                outPathReproject = outPath.replace(".", "_reproject.")
-                outPathClip = outPath.replace(".", "_clip.")
-                outPathResample = outPath.replace(".", "_resample_" + str(pixelSize) + ".")
+        for file in fileNames:
+            outPath, outPathReproject, outPathClip, outPathResample = createPaths(eauDir, file, pixelSize, True)
 
-                # Extraire le code EPSG de la donnée téléchargée.
-                data = gpd.read_file(outPath)
-                dataCRS, dataCRSStr = extractEPSGVector(data)
+            # Extraire le code EPSG de la donnée téléchargée.
+            data = gpd.read_file(outPath)
+            dataCRS, dataCRSStr = extractEPSGVector(data)
 
-                # Si la projection n'est pas la même que celle de la région d'intérêt et qu'un shp reprojeté n'existe pas.
-                if dataCRS != ROICRS and not os.path.exists(outPathReproject):
-                    reprojectShp(data, outPathReproject, ROICRSStr)
+            # Si la projection n'est pas la même que celle de la région d'intérêt et qu'un shp reprojeté n'existe pas.
+            if dataCRS != ROICRS and not os.path.exists(outPathReproject):
+                reprojectShp(data, outPathReproject, ROICRSStr)
 
-                # Si un shp découpé n'existe pas.
-                if not os.path.exists(outPathClip):
-                    clipShp(outPathReproject, outPathClip, ROIData)
+            # Si un .shp découpé n'existe pas.
+            if not os.path.exists(outPathClip):
+                clipShp(outPathReproject, outPathClip, ROIData)
 
 if __name__ == "__main__":
     main()
