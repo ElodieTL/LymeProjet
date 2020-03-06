@@ -69,6 +69,12 @@ def listRasterFiles(inDir):
 
     return rasterFiles
 
+# Fonction permettant de créer un nouveau répertoire pour le téléchargement de données.
+# inDir: String représentant le répertoire devant être créé s'il n'existe pas.
+def createDir(inDir):
+    if not os.path.exists(inDir):
+        os.makedirs(inDir)
+
 # Fonction permettant de télécharger des données (au format .zip ou non) provenant d'un serveur ou d'un site web.
 # url: String représentant l'adresse URL complète de la donnée à télécharger (.ZIP).
 # outPath: String représentant le chemin du fichier sortant.
@@ -221,32 +227,32 @@ def resampleRaster(inPath, outPath, inPixelSize, outPixelSize):
 # Fonction permettant rasteriser un shp. Résultat binaire: Valeur de 1 pour les entités shp et 0 pour le reste
 # inPath: String représentant le chemin vers le fichier shp entrant.
 # outPath: String représentant le chemin vers le fichier raster sortant.
-# PixelSize: largeur/hauteur d'un pixel du raster sortant
-# CRS : str représentant le code EPSG de la projection voulue (#).
-def rasterizingShp(inPath, outPath, PixelSize, CRS):
+# pixelSize: largeur/hauteur d'un pixel du raster sortant.
+# CRS : String représentant le code EPSG de la projection voulue (#).
+def rasterizingShp(inPath, outPath, pixelSize, CRS):
     NoData_value = -9999
     CRSint = int(CRS)
 
-    #Ouverture du fichier shp et lecture des attributs
+    # Ouverture du fichier .shp et lecture des attributs.
     shpData = ogr.Open(inPath)
     shpLayer = shpData.GetLayer()
     x_min, x_max, y_min, y_max = shpLayer.GetExtent()
 
-    #Création des données du fichier de destination
-    x_res = int((x_max - x_min) / PixelSize)
-    y_res = int((y_max - y_min) / PixelSize)
+    # Création des données du fichier de destination.
+    x_res = int((x_max - x_min) / pixelSize)
+    y_res = int((y_max - y_min) / pixelSize)
     target_ds = gdal.GetDriverByName('GTiff').Create(outPath, x_res, y_res, gdal.GDT_Byte)
-    target_ds.SetGeoTransform((x_min, PixelSize, 0, y_max, 0, -PixelSize))
+    target_ds.SetGeoTransform((x_min, pixelSize, 0, y_max, 0, -pixelSize))
     srs = osr.SpatialReference()  # Establish its coordinate encoding
     srs.ImportFromEPSG(CRSint)
     target_ds.SetProjection(srs.ExportToWkt())
     band = target_ds.GetRasterBand(1)
     band.SetNoDataValue(NoData_value)
 
-    # Rasterizer
-    gdal.RasterizeLayer(target_ds, [1], shpLayer, burn_values=[1])
+    # Rasteriser.
+    gdal.RasterizeLayer(target_ds, [1], shpLayer, burn_values = [1])
     target_ds = None
     array = band.ReadAsArray()
 
-    # Exporter en raster
+    # Exporter en raster.
     array.to_file(outPath)
