@@ -2,6 +2,7 @@ from generic import *
 from ZoneHumide import *
 from detForet import *
 from park import *
+from Eau import *
 
 def main():
     # Dimension d'un pixel pour un raster.
@@ -20,23 +21,24 @@ def main():
     ROICRS, ROICRSStr = extractEPSGVector(ROIData)
 
     # Télécharger les données de forêt de NRCan
-    rasters = [] # Créer une liste vide qui contiendra les rasters téléchargés.
+    rasters = [] # Créer une liste vide qui contiendra les rasters téléchargés. ?????Mais valide seulement si effectue depuis le début non? Aura pas les anciens rasters
 
     """ Traitement des données pour le déterminant Foret"""
-    Foret_raster = Foret(pixelSize, ROICRSStr, ROICRS, ROIData, ROIDataJson)
-    rasters.append(Foret_raster)
+    #Foret_raster = Foret(pixelSize, ROICRSStr, ROICRS, ROIData, ROIDataJson)
+    #rasters.append(Foret_raster)
 
     """ Traitement des données pour le déterminant Zone humide"""
-    ZH_raster = ZoneHumide(pixelSize, ROICRSStr, ROICRS, ROIData)
-    rasters.append(ZH_raster)
+    #ZH_raster = ZoneHumide(pixelSize, ROICRSStr, ROICRS, ROIData)
+    #rasters.append(ZH_raster)
 
     """ Traitement des données pour le déterminant Parc"""
     Parc_raster = Parc(pixelSize, ROICRSStr, ROICRS, ROIData)
     rasters.append(Parc_raster)
 
     """ Traitement des données pour le déterminant Eau"""
-    Eau_raster = Parc(pixelSize, ROICRSStr, ROICRS, ROIData)
-    rasters.append(Eau_raster )
+    #Eau_raster = Eau(pixelSize, ROICRSStr, ROICRS, ROIData)
+    #rasters.append(Eau_raster)
+
 
 if __name__ == "__main__":
     main()

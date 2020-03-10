@@ -17,13 +17,14 @@ def Parc(pixelSize, ROICRSStr, ROICRS, ROIData):
     for url in urlListParc:
         # Spécifier les liens vers les fichiers de sortie.
         outPath = os.path.join(parcDir, os.path.basename(url))
-        print(outPath)
+
         # Si le fichier vectoriel d'origine n'existe pas.
         if not os.path.exists(outPath):
             downloadData(url, outPath, parcDir, True)
 
         # Obtenir la liste de tous les fichiers shapefile des milieux humides
-        fileNames = [file for file in os.listdir(parcDir) if file.endswith('.shp') and not file.endswith('reproject.shp') and not file.endswith('clip.shp') and not file.endswith('resample' + str(pixelSize) + '.shp')]
+        fileNames = listChemin(parcDir, (".shp"), ("reproject.shp","clip.shp","resample" + str(pixelSize) + ".shp"))
+        # fileNames = [file for file in os.listdir(parcDir) if file.endswith('.shp') and not file.endswith('reproject.shp') and not file.endswith('clip.shp') and not file.endswith('resample' + str(pixelSize) + '.shp')]
 
         # Pour chaque lien de la liste
         for file in fileNames:

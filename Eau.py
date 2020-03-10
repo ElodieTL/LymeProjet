@@ -23,10 +23,8 @@ def Eau(pixelSize, ROICRSStr, ROICRS, ROIData):
         if not os.path.exists(outPath):
             downloadData(url, outPath, eauDir, True)
 
-        # Obtenir la liste de tous les fichiers shapefile des milieux humides
-        fileNames = [file for file in os.listdir(eauDir) if
-                     file.endswith(".shp") and not file.endswith("reproject.shp") and not file.endswith(
-                         "clip.shp") and not file.endswith("resample" + str(pixelSize) + ".shp")]
+        # Obtenir la liste de tous les fichiers shapefile du déterminant Eau
+        fileNames = listChemin(eauDir,("aterbody_2.shp")) #"watercourse_1.shp"
 
         for file in fileNames:
             outPath, outPathReproject, outPathClip, outPathRaster = createPaths(eauDir, file, pixelSize, True)

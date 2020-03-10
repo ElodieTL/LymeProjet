@@ -21,6 +21,7 @@ import requests
 import earthpy as et
 from osgeo import ogr
 from pyunpack import Archive
+import glob
 
 # Fonction permettant d'extraire le code EPSG (la projection) d'une donnée vectorielle.
 # data: objet geopandas représentant la donnée vectorielle.
@@ -94,6 +95,27 @@ def createPaths(inDir, baseName, pixelSize, rasterise = False):
         outPathResample = outPath.replace(".", "_resample_" + str(pixelSize) + ".")
 
         return outPath, outPathReproject, outPathClip, outPathResample
+
+# Fonction permettant de créer une liste des chemins menant au données
+# inDir: String représentant le répertoire contenant les fichiers du déterminants.
+# criteres: Liste des critère de sélection des fichiers désirés se terminant par... ex: (".shp", ".pdf")
+# condition: Liste des critères négatifs de sélection des fichiers désirés ne se terminant pas par...
+# fichier: Liste comportant le chemin des fichiers désirés
+def listChemin(indir, criteres, condition = None):
+    fichier = []
+    """
+    for i in dossier_chemin:
+        if os.path.isdir(i):
+            for j in critere:
+                fichier.extend(glob.glob(os.path.join(i, j)))
+            return fichier
+    """
+    for root, dirs, files in os.walk(indir):
+        for file in files:
+            if file.endswith(criteres) and not file.endswith(condition):
+                chemin = os.path.join(root, file)
+                fichier.insert(0, chemin)
+    return fichier
 
 # Fonction permettant de télécharger des données (au format .zip ou non) provenant d'un serveur ou d'un site web.
 # url: String représentant l'adresse URL complète de la donnée à télécharger (.ZIP).
