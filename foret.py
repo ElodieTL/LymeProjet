@@ -6,45 +6,55 @@ import cv2
 
 # Répertoire contenant les données de forêt.
 # dir = "X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données\Forêt"
-dir = r"Z:\MALAM357\GMT-3051 Projet en génie géomatique II\Donnees\Foret"
+dir = r"D:\Donnees\Foret"
 
-# Filepath
-pathFeuillus = os.path.join(dir, "NFI_MODIS250m_2011_kNN_SpeciesGroups_Broadleaf_Spp_v1_clip.tif")
-pathConiferes = os.path.join(dir, "NFI_MODIS250m_2011_kNN_SpeciesGroups_Needleleaf_Spp_v1_clip.tif")
-pathUnknown = os.path.join(dir, "NFI_MODIS250m_2011_kNN_SpeciesGroups_Unknown_Spp_v1_clip.tif")
-pathAll = os.path.join(dir, "NFI_MODIS250m_2011_kNN_SpeciesGroups_Unknown_Spp_v1_clip.tif")
+# Noms des fichiers pertinents.
+pathFeuillus = os.path.join(dir, "NFI_MODIS250m_2011_kNN_SpeciesGroups_Broadleaf_Spp_v1_resample_30.tif")
+pathConiferes = os.path.join(dir, "NFI_MODIS250m_2011_kNN_SpeciesGroups_Needleleaf_Spp_v1_resample_30.tif")
+pathUnknown = os.path.join(dir, "NFI_MODIS250m_2011_kNN_SpeciesGroups_Unknown_Spp_v1_resample_30.tif")
 
-# Liste des fichiers raster pertinents.
-liste = [pathFeuillus, pathConiferes, pathUnknown]
+pathAll = os.path.join(dir, "NFI_MODIS250m_2011_kNN_SpeciesGroups_All_Spp_v1_resample_30.tif")
 
-# Fusionner les rasters contenus dans la liste.
-es.stack(liste, pathAll)
+pathClass = os.path.join(dir, "NFI_MODIS250m_2011_kNN_SpeciesGroups_Class_Spp_v1_resample_30.tif")
 
-# bande 0 = inconnu bande 1 = feuillu bande 2 = conifère
+if not os.path.exists(pathAll):
+    print("Stacking rasters...")
 
-img = cv2.imread(pathAll, cv2.IMREAD_UNCHANGED)           # rgb
-rows, cols = img.shape[:2]
+    # Création d'une liste des fichiers raster pertinents.
+    liste = [pathFeuillus, pathConiferes, pathUnknown]
 
-img2 = np.ones((rows, cols,1), np.uint8) * 255
+    # Fusionner les rasters contenus dans la liste.
+    es.stack(liste, pathAll)  # Bande 1 = Feuillus, Bande 2 = Conifères, Bande 3 = Inconnu.
 
-for i in range(rows):
-    for j in range(cols):
-        if (img[i,j,0] == 0 and img[i,j,1] == 0 and img[i,j,2] == 0) :
-            img2[i,j] = 0
+if not os.path.exists(pathClass):
+    print("Classifying raster...")
 
-        if (img[i,j,0] > 50):
-            img2[i,j] = 0
+    imgAll = cv2.imread(re.sub(r"\\", r"\\\\", pathAll), -1)
+    rows = imgAll.shape[0]
+    cols = imgAll.shape[1]
 
-        elif (img[i,j,2] > 0 and img[i,j,1] / img[i,j,2] > 0.7 and img[i,j,1] / img[i,j,2] < 1.3):
-            img2[i,j] = 75
+    imgClass = np.ones((rows, cols, 3), np.uint8) * 255
 
-        elif (img[i,j,2] < img[i,j,1]):
-            img2[i,j] = 200
+    for i in range(rows):
+        for j in range(cols):
+            if (imgAll[i, j, 0] == 0 and imgAll[i, j, 1] == 0 and imgAll[i, j, 2] == 0) or imgAll[i, j, 2] > 50:  # Aucune forêt ou Inconnu.
+                imgClass[i, j, 0] = 0
+                imgClass[i, j, 1] = 0  # Noir
+                imgClass[i, j, 2] = 0
 
-        elif (img[i,j,2] > img[i,j,1]):
-            img2[i,j] = 125
+            elif imgAll[i, j, 2] > 0 and ((0.7 <= imgAll[i, j, 1] / imgAll[i, j, 2] <= 1.3) or (0.7 <= imgAll[i, j, 0] / imgAll[i, j, 2] <= 1.3)):  # Forêt mixte.
+                imgClass[i, j, 0] = 0
+                imgClass[i, j, 1] = 255  # Jaune
+                imgClass[i, j, 2] = 255
 
-# Feuillu = 200 conifère = 125 pas foret = 0 mixte = 75
+            elif imgAll[i, j, 2] < imgAll[i, j, 1]:  # Feuillus.
+                imgClass[i, j, 0] = 0
+                imgClass[i, j, 1] = 255  # Vert pâle
+                imgClass[i, j, 2] = 0
 
-cv2.imshow('image', img2)
-cv2.waitKey()
+            elif imgAll[i, j, 2] > imgAll[i, j, 1]:  # Conifères.
+                imgClass[i, j, 0] = 0
+                imgClass[i, j, 1] = 75  # Vert foncé
+                imgClass[i, j, 2] = 0
+
+    cv2.imwrite(pathClass, imgClass)
