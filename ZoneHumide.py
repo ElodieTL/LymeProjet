@@ -2,7 +2,8 @@ from generic import *
 
 def ZoneHumide(pixelSize, ROICRSStr, ROICRS, ROIData):
     # Répertoire où les données seront enregistrées
-    zonesHumidesDir = r"Z:\GALAL35\Projet_lyme\Donnees\Zones humides"
+    zonesHumidesDir = r"Z:\ELTAL8\ProjetLYME\c\Donnees\Zones humides"
+    #zonesHumidesDir = r"Z:\GALAL35\Projet_lyme\Donnees\Zones humides"
     #zonesHumidesDir = r"Z:\MALAM357\GMT-3051 Projet en génie géomatique II\Donnees\Zones humides"
 
     # Liste de liens menant aux données.

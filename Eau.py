@@ -2,7 +2,8 @@ from generic import *
 
 def Eau(pixelSize, ROICRSStr, ROICRS, ROIData):
     # Répertoire où les données seront enregistrées
-    eauDir = r"Z:\GALAL35\Projet_lyme\Donnees\Eau"
+    eauDir = r"Z:\ELTAL8\ProjetLYME\c\Donnees\Eau"
+    #eauDir = r"Z:\GALAL35\Projet_lyme\Donnees\Eau"
     #zonesHumidesDir = r"Z:\MALAM357\GMT-3051 Projet en génie géomatique II\Donnees\Eau"
 
     # Liste de liens menant aux données.

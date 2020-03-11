@@ -2,7 +2,8 @@ from generic import *
 
 def Parc(pixelSize, ROICRSStr, ROICRS, ROIData):
     # Répertoire où les données seront enregistrées
-    parcDir = r"Z:\GALAL35\Projet_lyme\Donnees/Parc"
+    parcDir = r"Z:\ELTAL8\ProjetLYME\c\Donnees\Parc"
+    #parcDir = r"Z:\GALAL35\Projet_lyme\Donnees/Parc"
     #parcDir = r"Z:\MALAM357\GMT-3051 Projet en génie géomatique II\Donnees/Parc"
 
     # Liste de liens menant aux données.

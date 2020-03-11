@@ -5,8 +5,8 @@ import earthpy.plot as ep
 import cv2
 
 # Répertoire contenant les données de forêt.
-# dir = "X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données\Forêt"
-dir = r"D:\Donnees\Foret"
+dir = "Z:\ELTAL8\ProjetLYME\c\Donnees\Foret"
+#dir = r"D:\Donnees\Foret"
 
 # Noms des fichiers pertinents.
 pathFeuillus = os.path.join(dir, "NFI_MODIS250m_2011_kNN_SpeciesGroups_Broadleaf_Spp_v1_resample_30.tif")
