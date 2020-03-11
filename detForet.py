@@ -1,8 +1,9 @@
 from generic import *
 
-def Foret(pixelSize, ROICRSStr, ROICRS, ROIData,ROIDataJson):
+
+def Foret(pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataJson):
     # Répertoire où les données seront enregistrées
-    foretsDir = r"Z:\GALAL35\Projet_lyme\Donnees\Foret"
+    foretsDir = r"D:\Donnees\Foret"
     #zonesHumidesDir = r"Z:\MALAM357\GMT-3051 Projet en génie géomatique II\Donnees\Foret"
 
     # Liste de liens menant aux données.
@@ -11,18 +12,18 @@ def Foret(pixelSize, ROICRSStr, ROICRS, ROIData,ROIDataJson):
         "http://ftp.geogratis.gc.ca/pub/nrcan_rncan/Forests_Foret/canada-forests-attributes_attributs-forests-canada/2011-attributes_attributs-2011/NFI_MODIS250m_2011_kNN_SpeciesGroups_Needleleaf_Spp_v1.tif",
         "http://ftp.geogratis.gc.ca/pub/nrcan_rncan/Forests_Foret/canada-forests-attributes_attributs-forests-canada/2011-attributes_attributs-2011/NFI_MODIS250m_2011_kNN_SpeciesGroups_Unknown_Spp_v1.tif"]
 
-    # Créer le répertoire s'il n'existe pas.
+    # Créer le répertoire où sera contenu les données, s'il n'existe pas.
     createDir(foretsDir)
 
-    # Créer une liste vide qui contiendra les rasters créés
+    # Créer une liste vide qui contiendra les rasters créés.
     rasters = []
 
-    # Pour chaque lien de la liste
+    # Pour chaque lien de la liste fournie.
     for url in urlListF:
-        # Spécifier les liens vers les fichiers de sortie.
+        # Créer les liens vers les fichiers de sortie.
         outPath, outPathReproject, outPathClip, outPathResample = createPaths(foretsDir, os.path.basename(url), pixelSize)
 
-        # Si le fichier raster d'origine n'existe pas.
+        # Si la donnée d'origine n'a pas été téléchargée ou n'existe pas.
         if not os.path.exists(outPath):
             downloadData(url, outPath)
 
@@ -39,12 +40,7 @@ def Foret(pixelSize, ROICRSStr, ROICRS, ROIData,ROIDataJson):
 
         # Si un raster rééchantillonné n'existe pas.
         if not os.path.exists(outPathResample):
-            # Extraire les dimensions d'un pixel.
-            width, height = getPixelSize(outPathClip)
-
-            # Si le pixel est carré.
-            if width == height:
-                resampleRaster(outPathClip, outPathResample, width, pixelSize)
+            resampleRaster2(outPathClip, ROIPathRaster, outPathResample)
 
         # Ajouter la donnée à la liste.
         rasters.append(outPathResample)

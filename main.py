@@ -4,15 +4,17 @@ from detForet import *
 from park import *
 from Eau import *
 
+
 def main():
     # Dimension d'un pixel pour un raster.
     pixelSize = 30
 
     # Importer et lire les données du shapelefile représentant la zone d'intérêt.
     # ROIPath = "X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2/ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
-    ROIPath = "Z:\GALAL35\Projet_lyme\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
-    #ROIPath = "Z:\MALAM357\GMT-3051 Projet en génie géomatique II\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
-    ROIData = gpd.read_file(ROIPath)
+    # ROIPath = "Z:\GALAL35\Projet_lyme\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
+    ROIPathVector = "Z:\MALAM357\GMT-3051 Projet en génie géomatique II\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
+    ROIPathRaster = "Z:\MALAM357\GMT-3051 Projet en génie géomatique II\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2_30.tif"
+    ROIData = gpd.read_file(ROIPathVector)
 
     # Transformer en format json
     ROIDataJson = geoToJson(ROIData)
@@ -24,20 +26,20 @@ def main():
     rasters = [] # Créer une liste vide qui contiendra les rasters téléchargés. ?????Mais valide seulement si effectue depuis le début non? Aura pas les anciens rasters
 
     """ Traitement des données pour le déterminant Foret"""
-    #Foret_raster = Foret(pixelSize, ROICRSStr, ROICRS, ROIData, ROIDataJson)
-    #rasters.append(Foret_raster)
+    Foret_raster = Foret(pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataJson)
+    # rasters.append(Foret_raster)
 
     """ Traitement des données pour le déterminant Zone humide"""
-    #ZH_raster = ZoneHumide(pixelSize, ROICRSStr, ROICRS, ROIData)
-    #rasters.append(ZH_raster)
+    # ZH_raster = ZoneHumide(pixelSize, ROICRSStr, ROICRS, ROIData)
+    # rasters.append(ZH_raster)
 
     """ Traitement des données pour le déterminant Parc"""
-    Parc_raster = Parc(pixelSize, ROICRSStr, ROICRS, ROIData)
-    rasters.append(Parc_raster)
+    # Parc_raster = Parc(pixelSize, ROICRSStr, ROICRS, ROIData)
+    # rasters.append(Parc_raster)
 
     """ Traitement des données pour le déterminant Eau"""
-    #Eau_raster = Eau(pixelSize, ROICRSStr, ROICRS, ROIData)
-    #rasters.append(Eau_raster)
+    # Eau_raster = Eau(pixelSize, ROICRSStr, ROICRS, ROIData)
+    # rasters.append(Eau_raster)
 
 
 if __name__ == "__main__":
