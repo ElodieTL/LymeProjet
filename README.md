@@ -27,3 +27,6 @@ Note: La taille maximale d'un fichier téléversé est de 100 Mo.
 2. Dans la console Anaconda, taper `conda env create -f <nom>.yml`
 3. Pour activer l'environnement, taper `conda activate <env>`.
 
+#### Comment revenir en arrière si un fichier est trop gros après un `git push`
+1. Cliquer-droit sur le répertoire *LymeProjet* et sélectionner *Git Bash Here*.
+2. Taper `git reset HEAD~#` où # est le nombre de commits à annuler (souvent 1).
