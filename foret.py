@@ -30,14 +30,18 @@ if not os.path.exists(pathClass):
     print("Classifying raster...")
 
     imgAll = cv2.imread(re.sub(r"\\", r"\\\\", pathAll), -1)
-    rows = imgAll.shape[0]
-    cols = imgAll.shape[1]
+    rows, cols = imgAll.shape[:2]
 
     imgClass = np.ones((rows, cols, 3), np.uint8) * 255
 
     for i in range(rows):
         for j in range(cols):
-            if (imgAll[i, j, 0] == 0 and imgAll[i, j, 1] == 0 and imgAll[i, j, 2] == 0) or imgAll[i, j, 2] > 50:  # Aucune forêt ou Inconnu.
+            if imgAll[i, j, 0] == 0 and imgAll[i, j, 1] == 0 and imgAll[i, j, 2] == 0:  # Aucune forêt ou Inconnu.
+                imgClass[i, j, 0] = 0
+                imgClass[i, j, 1] = 0  # Noir
+                imgClass[i, j, 2] = 0
+
+            if imgAll[i, j, 0] > 50:
                 imgClass[i, j, 0] = 0
                 imgClass[i, j, 1] = 0  # Noir
                 imgClass[i, j, 2] = 0
