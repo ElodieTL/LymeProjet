@@ -1,11 +1,9 @@
 from generic import *
 
 
-def eau(pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIData):
+def eau(dir, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIData):
     # Répertoire où les données seront enregistrées.
-    # eauDir = r"Z:\ELTAL8\ProjetLYME\c\Donnees\Eau"
-    # eauDir = r"Z:\GALAL35\Projet_lyme\Donnees\Eau"
-    eauDir = r"D:\Donnees\Eau"
+    eauDir = dir + r"\Eau"
 
     # Liste de liens menant aux données.
     urlListEau = [
@@ -45,7 +43,7 @@ def eau(pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIData):
                     clip = clipVector(outPathReproject, outPathClip, ROIData)
 
                 # Si le fichier vectoriel n'est pas rasterisé.
-                if not os.path.exists(outPathRaster) and clip:
+                if (not os.path.exists(outPathRaster) and clip) or os.path.exists(outPathClip):
                     rasteriseVector(outPathClip, ROIPathRaster, outPathRaster)
 
             else:

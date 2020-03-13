@@ -1,11 +1,9 @@
 from generic import *
 
 
-def zonesHumides(pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIData):
+def zonesHumides(dir, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIData):
     # Répertoire où les données seront enregistrées.
-    # zonesHumidesDir = r"Z:\ELTAL8\ProjetLYME\c\Donnees\Zones humides"
-    # zonesHumidesDir = r"Z:\GALAL35\Projet_lyme\Donnees\Zones humides"
-    zonesHumidesDir = r"D:\Donnees\Zones humides"
+    zonesHumidesDir = dir + r"\Zones humides"
 
     # Liste de liens menant aux données.
     urlListZH = [
@@ -45,7 +43,7 @@ def zonesHumides(pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIData):
                     clip = clipVector(outPathReproject, outPathClip, ROIData)
 
                 # Si le fichier vectoriel n'est pas rasterisé.
-                if not os.path.exists(outPathRaster) and clip:
+                if (not os.path.exists(outPathRaster) and clip) or os.path.exists(outPathClip):
                     rasteriseVector(outPathClip, ROIPathRaster, outPathRaster)
 
             else:

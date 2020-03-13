@@ -1,11 +1,9 @@
 from generic import *
 
 
-def parcs(pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIData):
+def parcs(dir, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIData):
     # Répertoire où les données seront enregistrées.
-    # parcsDir = r"Z:\ELTAL8\ProjetLYME\c\Donnees\Parc"
-    # parcsDir = r"Z:\GALAL35\Projet_lyme\Donnees/Parc"
-    parcsDir = r"D:\Donnees\Parcs"
+    parcsDir = dir + r"\Parcs"
 
     # Liste de liens menant aux données.
     urlListParc = [
@@ -29,7 +27,7 @@ def parcs(pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIData):
         # Pour chaque lien de la liste
         for file in fileNames:
             # Spécifier les liens vers les fichiers de sortie.
-            outPath, outPathReproject, outPathClip, outPathRaster = createPaths(parcDir, file, pixelSize, True)
+            outPath, outPathReproject, outPathClip, outPathRaster = createPaths(parcsDir, file, pixelSize, True)
 
             # Extraire le code EPSG de la donnée téléchargée.
             data = gpd.read_file(outPath)
@@ -46,7 +44,7 @@ def parcs(pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIData):
                     clip = clipVector(outPathReproject, outPathClip, ROIData)
 
                 # Si le fichier vectoriel n'est pas rasterisé.
-                if not os.path.exists(outPathResample) and clip:
+                if (not os.path.exists(outPathRaster) and clip) or os.path.exists(outPathClip):
                     rasteriseVector(outPathClip, ROIPathRaster, outPathRaster)
 
             else:

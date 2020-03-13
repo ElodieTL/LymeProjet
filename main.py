@@ -1,17 +1,38 @@
 from generic import *
+from tkinter import *
 from ZoneHumide import *
 from detForet import *
 from park import *
 from Eau import *
 
 
-def main():
-    # Dimension d'un pixel pour un raster.
-    pixelSize = 30
+def getValues():
+    # Créer une liste vide des déterminants qui seront traités.
+    det = []
 
-    # Liste des traitements à exécuter.
-    listeTraitements = [3]
+    # Récupérer le répertoire entré par l'utilisateur.
+    dir = entryDir.get()
 
+    # Récupérer la dimension d'un pixel.
+    pixelSize = entryPixel.get()
+
+    # Ajouter l'état des checkBoxes dans la liste.
+    det.append(varForet.get())
+    det.append(varZonesHumides.get())
+    det.append(varEau.get())
+    det.append(varParcs.get())
+
+    # Fermer la fenêtre.
+    mainWindow.destroy()
+
+    main(dir, det, pixelSize)
+
+
+def quit():
+    sys.exit()
+
+
+def main(dir, det, pixelSize):
     # Importer et lire les données du shapelefile et du raster représentant la zone d'intérêt.
     # ROIPathVector = "X:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2/ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
     # ROIPathVector = "Z:\GALAL35\Projet_lyme\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp"
@@ -28,24 +49,70 @@ def main():
     ROICRS, ROICRSStr = extractEPSGVector(ROIDataVector)
 
     if ROICRS is not None:
-        if 1 in listeTraitements:
+        if det[0] == 1:
             """ Traitement des données pour le déterminant Forêt """
-            foret(pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVectorJson)
+            foret(dir, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVectorJson)
 
-        if 2 in listeTraitements:
+        if det[1] == 1:
             """ Traitement des données pour le déterminant Zones humides """
-            zonesHumides(pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector)
+            zonesHumides(dir, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector)
 
-        if 3 in listeTraitements:
-            """ Traitement des données pour le déterminant Parcs """
-            parcs(pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector)
-
-        if 4 in listeTraitements:
+        if det[2] == 1:
             """ Traitement des données pour le déterminant Eau """
-            eau(pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector)
+            eau(dir, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector)
+
+        if det[3] == 1:
+            """ Traitement des données pour le déterminant Parcs """
+            parcs(dir, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector)
+
     else:
         print("No projection detected for ROI. Impossible to proceed.")
 
 
 if __name__ == "__main__":
-    main()
+    mainWindow = Tk()
+    mainWindow.title("Fusion et classification de déterminants environnementaux")
+
+    labelTitre = Label(mainWindow, text="Maladie de Lyme")
+    labelTitre.grid(columnspan=2)
+
+    labelForet = Label(mainWindow, text="Forêt")
+    labelForet.grid(row=1)
+    varForet = IntVar()
+    checkForet = Checkbutton(mainWindow, variable=varForet)
+    checkForet.grid(row=1, column=1)
+
+    labelZonesHumides = Label(mainWindow, text="Zones humides")
+    labelZonesHumides.grid(row=2)
+    varZonesHumides = IntVar()
+    checkZonesHumides = Checkbutton(mainWindow, variable=varZonesHumides)
+    checkZonesHumides.grid(row=2, column=1)
+
+    labelEau = Label(mainWindow, text="Eau")
+    labelEau.grid(row=3)
+    varEau = IntVar()
+    checkEau = Checkbutton(mainWindow, variable=varEau)
+    checkEau.grid(row=3, column=1)
+
+    labelParcs = Label(mainWindow, text="Parcs")
+    labelParcs.grid(row=4)
+    varParcs = IntVar()
+    checkParcs = Checkbutton(mainWindow, variable=varParcs)
+    checkParcs.grid(row=4, column=1)
+
+    labelDir = Label(mainWindow, text="Directory:")
+    labelDir.grid(row=5)
+    entryDir = Entry(mainWindow)
+    entryDir.grid(row=5, column=1)
+
+    labelPixel = Label(mainWindow, text="Pixel Size:")
+    labelPixel.grid(row=6)
+    entryPixel = Entry(mainWindow)
+    entryPixel.grid(row=6, column=1)
+
+    buttonOK = Button(mainWindow, text="OK", command=getValues)
+    buttonOK.grid(row=7)
+    buttonQuit = Button(mainWindow, text="Quit", command=quit)
+    buttonQuit.grid(row=7, column=1)
+
+    mainWindow.mainloop()

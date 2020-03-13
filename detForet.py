@@ -1,9 +1,9 @@
 from generic import *
 
 
-def foret(pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataJson):
+def foret(dir, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataJson):
     # Répertoire où les données seront enregistrées.
-    foretsDir = r"D:\Donnees\Foret"
+    foretsDir = dir + r"\Foret"
 
     # Liste de liens menant aux données.
     urlListF = [
