@@ -1,52 +1,52 @@
 from generic import *
 
-def Eau(pixelSize, ROICRSStr, ROICRS, ROIData):
-    # Répertoire où les données seront enregistrées
-    eauDir = r"Z:\ELTAL8\ProjetLYME\c\Donnees\Eau"
-    #eauDir = r"Z:\GALAL35\Projet_lyme\Donnees\Eau"
-    #zonesHumidesDir = r"Z:\MALAM357\GMT-3051 Projet en génie géomatique II\Donnees\Eau"
+
+def eau(pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIData):
+    # Répertoire où les données seront enregistrées.
+    # eauDir = r"Z:\ELTAL8\ProjetLYME\c\Donnees\Eau"
+    # eauDir = r"Z:\GALAL35\Projet_lyme\Donnees\Eau"
+    eauDir = r"D:\Donnees\Eau"
 
     # Liste de liens menant aux données.
     urlListEau = [
         "http://ftp.geogratis.gc.ca/pub/nrcan_rncan/vector/canvec/shp/Hydro/canvec_250K_QC_Hydro_shp.zip"]
 
-    # Créer le répertoire s'il n'existe pas.
+    # Créer le répertoire où sera contenu les données, s'il n'existe pas.
     createDir(eauDir)
 
-    # # Créer une liste vide qui contiendra les rasters créés
-    rasters = []
-
+    # Pour chaque lien de la liste fournie.
     for url in urlListEau:
-        # Spécifier les liens vers les fichiers de sortie.
+        # Spécifier le lien vers le fichier en sortie.
         outPath = os.path.join(eauDir, os.path.basename(url))
 
-        # Si le fichier vectoriel d'origine n'existe pas.
+        # Si la donnée d'origine n'a pas été téléchargée ou n'existe pas.
         if not os.path.exists(outPath):
             downloadData(url, outPath, eauDir, True)
 
-        # Obtenir la liste de tous les fichiers shapefile du déterminant Eau
-        fileNames = listChemin(eauDir,("aterbody_2.shp")) #"watercourse_1.shp"
+        # Obtenir la liste de tous les fichiers vectoriels.
+        fileNames = listFiles(eauDir, ".shp", ("reproject.shp", "clip.shp", "resample" + str(pixelSize) + ".shp"))
 
         for file in fileNames:
+            # Créer les liens vers les fichiers de sortie.
             outPath, outPathReproject, outPathClip, outPathRaster = createPaths(eauDir, file, pixelSize, True)
 
             # Extraire le code EPSG de la donnée téléchargée.
             data = gpd.read_file(outPath)
             dataCRS, dataCRSStr = extractEPSGVector(data)
 
-            # Si la projection n'est pas la même que celle de la région d'intérêt et qu'un shp reprojeté n'existe pas.
-            if dataCRS != ROICRS and not os.path.exists(outPathReproject):
-                reprojectShp(data, outPathReproject, ROICRSStr)
+            # Si la projection n'est pas la même que celle de la région d'intérêt et qu'un raster reprojeté n'existe pas.
+            if dataCRS is not None:
+                if dataCRS != ROICRS and not os.path.exists(outPathReproject):
+                    reprojectVector(data, outPathReproject, ROICRSStr)
 
-            # Si un .shp découpé n'existe pas.
-            if not os.path.exists(outPathClip):
-                clipShp(outPathReproject, outPathClip, ROIData)
+                # Si un .shp découpé n'existe pas.
+                clip = False
+                if not os.path.exists(outPathClip):
+                    clip = clipVector(outPathReproject, outPathClip, ROIData)
 
-            # Si le .shp n'est pas rasterisé.
-            if not os.path.exists(outPathRaster):
-                rasteriseShp(outPathClip, outPathRaster, pixelSize, ROICRS)
+                # Si le fichier vectoriel n'est pas rasterisé.
+                if not os.path.exists(outPathRaster) and clip:
+                    rasteriseVector(outPathClip, ROIPathRaster, outPathRaster)
 
-            # Ajouter la donnée à la liste.
-            rasters.append(outPathRaster)
-
-        return rasters
+            else:
+                print("No projection detected for raster " + outPath + ". Impossible to proceed.")

@@ -1,10 +1,9 @@
 from generic import *
 
 
-def Foret(pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataJson):
-    # Répertoire où les données seront enregistrées
+def foret(pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataJson):
+    # Répertoire où les données seront enregistrées.
     foretsDir = r"D:\Donnees\Foret"
-    #zonesHumidesDir = r"Z:\MALAM357\GMT-3051 Projet en génie géomatique II\Donnees\Foret"
 
     # Liste de liens menant aux données.
     urlListF = [
@@ -14,9 +13,6 @@ def Foret(pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataJson):
 
     # Créer le répertoire où sera contenu les données, s'il n'existe pas.
     createDir(foretsDir)
-
-    # Créer une liste vide qui contiendra les rasters créés.
-    rasters = []
 
     # Pour chaque lien de la liste fournie.
     for url in urlListF:
@@ -31,18 +27,17 @@ def Foret(pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataJson):
         rasterCRS, rasterCRSStr = extractEPSGRaster(outPath)
 
         # Si la projection n'est pas la même que celle de la région d'intérêt et qu'un raster reprojeté n'existe pas.
-        if rasterCRS != ROICRS and not os.path.exists(outPathReproject):
-            reprojectRaster(outPath, outPathReproject, ROICRSStr)
+        if rasterCRS is not None:
+            if rasterCRS != ROICRS and not os.path.exists(outPathReproject):
+                reprojectRaster(outPath, outPathReproject, ROICRSStr)
 
-        # Si un raster découpé n'existe pas.
-        if not os.path.exists(outPathClip):
-            clipRaster(outPathReproject, outPathClip, ROIDataJson, ROICRS)
+            # Si un raster découpé n'existe pas.
+            if not os.path.exists(outPathClip):
+                clipRaster(outPathReproject, outPathClip, ROIDataJson, ROICRS)
 
-        # Si un raster rééchantillonné n'existe pas.
-        if not os.path.exists(outPathResample):
-            resampleRaster2(outPathClip, ROIPathRaster, outPathResample)
+            # Si un raster rééchantillonné n'existe pas.
+            if not os.path.exists(outPathResample):
+                resampleRaster(outPathClip, ROIPathRaster, outPathResample)
 
-        # Ajouter la donnée à la liste.
-        rasters.append(outPathResample)
-
-    return rasters
+        else:
+            print("No projection detected for raster " + outPath + ". Impossible to proceed.")

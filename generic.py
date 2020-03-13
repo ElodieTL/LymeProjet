@@ -23,24 +23,26 @@ from osgeo import ogr
 from pyunpack import Archive
 import glob
 
+
 # Fonction permettant d'extraire le code EPSG (la projection) d'une donnée vectorielle.
-# data: objet geopandas représentant la donnée vectorielle.
-# dataCRS: entier représentant le code EPSG de la projection utilisée (#).
-# dataCRSStr: String représentant le code EPSG de la projection utilisée (EPSG:#).
-def extractEPSGVector(data):
+# vectorData: objet geopandas représentant la donnée vectorielle.
+# vectorDataCRS: entier représentant le code EPSG de la projection utilisée (#).
+# vectorDataCRSStr: String représentant le code EPSG de la projection utilisée (EPSG:#).
+def extractEPSGVector(vectorData):
     # Extraire le code EPSG (la projection) du fichier vectoriel.
-    dataCRS = re.search('epsg:(.*)', str(data.crs))
+    vectorDataCRS = re.search("epsg:(.*)", str(vectorData.crs))
 
     # Si une projection existe, extraire le code numérique et un String pour d'autres fonctions.
-    if dataCRS is not None:
-        dataCRS = dataCRS.group(1)
-        dataCRSStr = "EPSG:" + dataCRS
+    if vectorDataCRS is not None:
+        vectorDataCRS = vectorDataCRS.group(1)
+        vectorDataCRSStr = "EPSG:" + vectorDataCRS
 
-        return dataCRS, dataCRSStr
+        return vectorDataCRS, vectorDataCRSStr
 
     # Si aucune projection n'est détectée, retourner None.
     else:
         return None, None
+
 
 # Fonction permettant d'extraire le code EPSG (la projection) de données de type raster.
 # inPath: String représentant le chemin vers le fichier raster entrant.
@@ -48,41 +50,56 @@ def extractEPSGVector(data):
 # rasterCRSStr: String représentant le code EPSG de la projection utilisée (EPSG:#).
 def extractEPSGRaster(inPath):
     # Ouvrir le raster pour recherche.
-    raster = gdal.Open(inPath)
+    raster = gdal.Open(inPath, gdal.GA_ReadOnly)
 
     # Extraire le code EPSG (la projection) du raster.
-    rasterCRS = osr.SpatialReference(wkt=raster.GetProjection()).GetAttrValue('AUTHORITY', 1)
+    rasterCRS = osr.SpatialReference(wkt=raster.GetProjection()).GetAttrValue("AUTHORITY", 1)
     rasterCRSStr = "EPSG:" + rasterCRS
 
-    return rasterCRS, rasterCRSStr
+    # Si une projection existe.
+    if rasterCRS is not None:
+        return rasterCRS, rasterCRSStr
 
-# Fonction permettant de créer une liste de fichiers de type raster.
-# inDir: String représentant le répertoire où sont stockées les fichiers.
-# rasterFiles: List contenant les fichiers de type raster.
-def listRasterFiles(inDir):
-    # Créer un liste vide.
-    rasterFiles = []
+    # Si aucune projection n'est détectée, retourner None.
+    else:
+        return None, None
 
-    # Parcourir le répertoire afin de lister les fichiers de type raster.
+
+# Fonction permettant de créer une liste des chemins menant au données.
+# inDir: String représentant le répertoire contenant les fichiers du déterminants.
+# criteres: Liste des critère de sélection des fichiers désirés se terminant par... (".shp", ".pdf").
+# conditions: Liste des critères négatifs de sélection des fichiers désirés ne se terminant pas par...
+# fichier: Liste comportant le chemin des fichiers désirés.
+def listFiles(inDir, criteres, conditions=None):
+    fichiers = []
+
     for root, dirs, files in os.walk(inDir):
         for file in files:
-            if file.endswith((".tif", ".TIF", ".TIFF", ".tiff")):
-                rasterFiles.append(os.path.join(root, file))
+            if conditions is None:
+                if file.endswith(criteres):
+                    fichiers.append(os.path.join(root, file))
+            else:
+                if file.endswith(criteres) and not file.endswith(conditions):
+                    fichiers.append(os.path.join(root, file))
 
-    return rasterFiles
+    return fichiers
+
 
 # Fonction permettant de créer un nouveau répertoire pour le téléchargement de données.
 # inDir: String représentant le répertoire devant être créé, s'il n'existe pas.
 def createDir(inDir):
     if not os.path.exists(inDir):
+        print("Creating directory " + inDir + "...")
+
         os.makedirs(inDir)
 
-# Fonction permettant de créer les noms de fichiers nécessaires au processus.
+
+# Fonction permettant de créer les noms de fichiers nécessaires aux différents processus.
 # inDir: String représentant le répertoire contenant les fichiers créés.
 # baseName: String représentant le nom du fichier de base.
 # pixelSize: largeur/hauteur d'un pixel d'un raster rééchantillonné.
-# rasterise: Boolean représentant si un fichier sera rasterisé au cours du traitement.
-def createPaths(inDir, baseName, pixelSize, rasterise = False):
+# rasterise: Boolean représentant si un fichier sera rasterisé au cours d'un traitement subséquent.
+def createPaths(inDir, baseName, pixelSize, rasterise=False):
     outPath = os.path.join(inDir, baseName)
     outPathReproject = outPath.replace(".", "_reproject.")
     outPathClip = outPath.replace(".", "_clip.")
@@ -96,45 +113,26 @@ def createPaths(inDir, baseName, pixelSize, rasterise = False):
 
         return outPath, outPathReproject, outPathClip, outPathResample
 
-# Fonction permettant de créer une liste des chemins menant au données
-# inDir: String représentant le répertoire contenant les fichiers du déterminants.
-# criteres: Liste des critère de sélection des fichiers désirés se terminant par... ex: (".shp", ".pdf")
-# condition: Liste des critères négatifs de sélection des fichiers désirés ne se terminant pas par...
-# fichier: Liste comportant le chemin des fichiers désirés
-def listChemin(indir, criteres, condition = None):
-    fichier = []
-    """
-    for i in dossier_chemin:
-        if os.path.isdir(i):
-            for j in critere:
-                fichier.extend(glob.glob(os.path.join(i, j)))
-            return fichier
-    """
-    for root, dirs, files in os.walk(indir):
-        for file in files:
-            if file.endswith(criteres) and not file.endswith(condition):
-                chemin = os.path.join(root, file)
-                fichier.insert(0, chemin)
-    return fichier
 
 # Fonction permettant de télécharger des données (au format .zip ou non) provenant d'un serveur ou d'un site web.
 # url: String représentant l'adresse URL complète de la donnée à télécharger.
 # outPath: String représentant le chemin du fichier sortant.
 # pathDir: String représentant le chemin des fichiers dé-zippés (facultatif).
 # zip: Boolean représentant si les données à télécharger sont contenues dans un fichier .zip (facultatif).
-def downloadData(url, outPath, pathDir = "", zip = False):
+def downloadData(url, outPath, pathDir="", zip=False):
     fileName = os.path.basename(url)
-
     print("Downloading " + fileName + "...")
+
     urllib.request.urlretrieve(url, outPath)
 
     if zip:
         print("Unzipping " + fileName + "...")
         Archive(outPath).extractall(pathDir)
 
-        #with ZipFile(outPath, 'r') as zipObj:
+        #with ZipFile(outPath, "r") as zipObj:
             #print("Unzipping " + fileName + "...")
             #zipObj.extractall(pathDir)
+
 
 # Fonction permettant de reprojeter un fichier de type raster.
 # inPath: String représentant le chemin vers le fichier raster entrant.
@@ -148,23 +146,25 @@ def reprojectRaster(inPath, outPath, dstCRS):
     with rio.open(inPath) as src:
         transform, width, height = calculate_default_transform(src.crs, dst_crs, src.width, src.height, *src.bounds)
         kwargs = src.meta.copy()
-        kwargs.update({'crs': dstCRS, 'transform': transform, 'width': width, 'height': height})
+        kwargs.update({"crs": dstCRS, "transform": transform, "width": width, "height": height})
 
         # Effectuer la reprojection et exporter le raster résultant.
-        with rio.open(outPath, 'w', **kwargs) as dst:
+        with rio.open(outPath, "w", **kwargs) as dst:
             for i in range(1, src.count + 1):
                 reproject(source=rio.band(src, i), destination=rio.band(dst, i), src_transform=src.transform, src_crs=src.crs, dst_transform=transform, dst_crs=dstCRS, resampling=Resampling.nearest)
+
 
 # Fonction permettant de reprojeter un fichier de formes.
 # data: Fichier shp entrant.
 # outPath: String représentant le chemin vers le fichier shp sortant.
 # dstCrs: String représentant le code EPSG de la projection voulue (EPSG:#).
-def reprojectShp(data, outPath, dstCRS):
+def reprojectVector(vectorData, outPath, dstCRS):
     fileName = os.path.basename(outPath)
-    print("Reprojecting: " + fileName + "...")
+    print("Reprojecting " + fileName.replace("_reproject", "") + "...")
 
-    data_reproject = data.to_crs(dstCRS)
-    data_reproject.to_file(outPath)
+    vectorDataReproject = vectorData.to_crs(dstCRS)
+    vectorDataReproject.to_file(outPath)
+
 
 # Fonction permettant d'ouvrir un raster et de l'ajouter à une liste de rasters ouverts.
 # inPath: String représentant le chemin vers le fichier raster entrant.
@@ -178,10 +178,12 @@ def addRastertoRasters(inPath, rasters):
 
     return rasters
 
+
 # Fonction permettant de transformer une géométrie d'une geodataframe en format json.
 # gdf: objet de type geodataframe contenant un champ 'geometry'.
 def geoToJson(gdf):
-    return[json.loads(gdf.to_json())['features'][0]['geometry']]
+    return[json.loads(gdf.to_json())["features"][0]["geometry"]]
+
 
 # Fonction permettant de découper un raster selon une région d'intérêt.
 # inPath: String représentant le chemin vers le fichier raster entrant.
@@ -206,25 +208,39 @@ def clipRaster(inPath, outPath, clipPoly, epsgVector):
     with rio.open(outPath, "w", **outMeta) as dest:
         dest.write(outRaster)
 
-# Fonction permettant de découper un fichier de forme selon une région d'intérêt.
+
+# Fonction permettant de découper un fichier vectoriel selon une région d'intérêt.
 # inPath: String représentant le chemin vers le fichier shp entrant.
 # outPath: String représentant le chemin vers le fichier shp sortant.
 # clipPoly: objet de type geopandas servant au découpage.
-def clipShp(inPath, outPath, clipPoly):
+# clip: Boolean indiquant si un fichier découpé a été produit.
+def clipVector(inPath, outPath, clipPoly):
     fileName = os.path.basename(inPath)
-    print("Clipping shapefile " + fileName + "...")
+    print("Clipping vector file " + fileName + "...")
 
     # Ouvrir le fichier.
-    shp = gpd.read_file(inPath)
+    dataVector = gpd.read_file(inPath)
 
-    # Appliquer un buffer nul (pour gérer les géométries invalides, au besoin).
-    shp['geometry'] = shp.geometry.buffer(0)
+    if not dataVector.empty:
+        # Appliquer un buffer nul (pour gérer les géométries invalides, au besoin).
+        dataVector["geometry"] = dataVector.geometry.buffer(0)
 
-    # Découper le shp
-    shpClipped = gpd.clip(shp, clipPoly)
+        # Découper le fichier vectoriel
+        dataVectorClip = gpd.clip(dataVector, clipPoly)
 
-    # Exporter le raster résultant.
-    shpClipped.to_file(outPath)
+        if not dataVectorClip.empty:
+            # Exporter le raster résultant.
+            dataVectorClip.to_file(outPath)
+            clip = True
+
+            return clip
+
+        else:
+            print("No data after clipping.")
+            clip = False
+
+            return clip
+
 
 # Fonction permettant d'extraire la hauteur et la largeur d'un pixel pour un raster.
 # inPath: String représentant le chemin vers le fichier raster entrant.
@@ -240,38 +256,12 @@ def getPixelSize(inPath):
 
     return width, height
 
-# Fonction permettant de rééchantillonner un raster.
-# inPath: String représentant le chemin vers le fichier raster entrant.
-# outPath: String représentant le chemin vers le fichier raster sortant.
-# inPixelSize: largeur/hauteur d'un pixel déterminée à l'aide de la fonction getPixelSize().
-# outPixelSize: largeur/hauteur d'un pixel voulue.
-def resampleRaster(inPath, outPath, inPixelSize, outPixelSize):
-    fileName = os.path.basename(inPath)
-    print("Resampling raster " + fileName + "...")
-
-    # Calcul du facteur d'agrandissement/de réduction.
-    factor = inPixelSize / outPixelSize
-
-    # Ouvrir le raster.
-    raster = rio.open(inPath)
-
-    # Rééchantillonner le raster.
-    data = raster.read(out_shape = (raster.count, int(raster.width * factor), int(raster.height * factor)), resampling = Resampling.bilinear)
-    transform = raster.transform * raster.transform.scale((raster.width / data.shape[-2]), (raster.height / data.shape[-1]))
-
-    # Mettre à jour les métadonnées.
-    meta = raster.meta.copy()
-    meta.update({"driver": "GTiff", "height": int(raster.height * factor), "width": int(raster.width * factor), "transform": transform})
-
-    # Exporter le raster résultant.
-    with rio.open(outPath, 'w', **meta) as dst:
-        dst.write(data)
 
 # Fonction permettant de rééchantillonner un raster.
 # inPath: String représentant le chemin vers le fichier raster entrant.
 # inPathRef: String représentant le chemin vers le fichier raster servant de référence.
 # outPath: String représentant le chemin vers le fichier raster sortant.
-def resampleRaster2(inPath, inPathRef, outPath):
+def resampleRaster(inPath, inPathRef, outPath):
     fileName = os.path.basename(inPath)
     print("Resampling raster " + fileName + "...")
 
@@ -284,61 +274,30 @@ def resampleRaster2(inPath, inPathRef, outPath):
     pixelWidth = ref.RasterXSize
     pixelHeight = ref.RasterYSize
 
-    out = gdal.GetDriverByName('GTiff').Create(outPath, pixelWidth, pixelHeight, 1, gdal.GDT_Float32)
+    out = gdal.GetDriverByName("GTiff").Create(outPath, pixelWidth, pixelHeight, 1, gdal.GDT_Float32)
     out.SetGeoTransform(refTrans)
     out.SetProjection(refProj)
 
     gdal.ReprojectImage(src, out, srcProj, refProj, gdal.GRA_NearestNeighbour)
 
-# Fonction permettant rasteriser un shp. Résultat binaire: Valeur de 1 pour les entités shp et 0 pour le reste
-# inPath: String représentant le chemin vers le fichier shp entrant.
+
+# Fonction permettant de rasteriser un fichier vectoriel.
+# inPathVector: String représentant le chemin vers le fichier vectoriel entrant.
+# inPathRaster: String représentant le chemin vers le fichier raster servant de référence.
 # outPath: String représentant le chemin vers le fichier raster sortant.
-# pixelSize: largeur/hauteur d'un pixel du raster sortant.
-# CRS : String représentant le code EPSG de la projection voulue (#).
-def rasteriseShp(inPath, outPath, pixelSize, CRS):
-    fileName = os.path.basename(inPath)
-    print("Rasterising " + fileName + "...")
-
-    NoData_value = -9999
-    CRSint = int(CRS)
-
-    # Ouverture du fichier .shp et lecture des attributs.
-    shpData = ogr.Open(inPath)
-    shpLayer = shpData.GetLayer()
-    x_min, x_max, y_min, y_max = shpLayer.GetExtent()
-
-    # Création des données du fichier de destination.
-    x_res = int((x_max - x_min) / pixelSize)
-    y_res = int((y_max - y_min) / pixelSize)
-    target_ds = gdal.GetDriverByName('GTiff').Create(outPath, x_res, y_res, gdal.GDT_Byte)
-    target_ds.SetGeoTransform((x_min, pixelSize, 0, y_max, 0, -pixelSize))
-    srs = osr.SpatialReference()  # Establish its coordinate encoding
-    srs.ImportFromEPSG(CRSint)
-    target_ds.SetProjection(srs.ExportToWkt())
-    band = target_ds.GetRasterBand(1)
-    band.SetNoDataValue(NoData_value)
-
-    # Rasteriser.
-    gdal.RasterizeLayer(target_ds, [1], shpLayer, burn_values = [1])
-    target_ds = None
-    array = band.ReadAsArray()
-
-    # Exporter en raster.
-    array.to_file(outPath)
-
-def rasteriseShp2(inPathVector, inPathRaster, outPath):
+def rasteriseVector(inPathVector, inPathRaster, outPath):
     fileName = os.path.basename(inPathVector)
     print("Rasterising " + fileName + "...")
 
-    rasterRef = gdal.Open(inPath, gdal.GA_ReadOnly)
+    rasterRef = gdal.Open(inPathRaster, gdal.GA_ReadOnly)
 
-    shp = ogr.Open(inPathRaster)
-    shpLayer = shp.GetLayer()
+    vectorData = ogr.Open(inPathVector)
+    vectorLayer = vectorData.GetLayer()
 
-    out = gdal.GetDriverByName("GTiff").Create(outPath, rasterRef.RasterXSize, rasterRef.RasterYSize, 1, gdal.GDT_Byte, options=['COMPRESS=DEFLATE'])
-    out.SetProjection(raster.GetProjectionRef())
+    out = gdal.GetDriverByName("GTiff").Create(outPath, rasterRef.RasterXSize, rasterRef.RasterYSize, 1, gdal.GDT_Byte, options=["COMPRESS=DEFLATE"])
+    out.SetProjection(rasterRef.GetProjectionRef())
     out.SetGeoTransform(rasterRef.GetGeoTransform())
 
     band = out.GetRasterBand(1)
     band.SetNoDataValue(0)
-    gdal.RasterizeLayer(out, [1], shpLayer, burn_values=[1])
+    gdal.RasterizeLayer(out, [1], vectorLayer, burn_values=[1])
