@@ -9,6 +9,7 @@ import urllib
 import geopandas as gpd
 import rasterio as rio
 import json
+import matplotlib.pyplot as plt
 import pycrs
 from rasterio.merge import merge
 from rasterio.mask import mask
@@ -16,6 +17,7 @@ from rasterio.plot import show
 from rasterio.warp import calculate_default_transform, reproject, Resampling
 import gdal
 import earthpy.spatial as es
+import earthpy.plot as ep
 
 # Data dir
 data_dir = "Z:\ELTAL8\ProjetLYME\ROI_Projet_Genie_Maladies_Vectorielles_v2\Données\Forêt"
@@ -43,15 +45,22 @@ feuillu = feuillu.astype(float)
 inconnu = inconnu.astype(float)
 conifere = conifere.astype(float)
 
-checkForet = np.greater(conifere, 50)
-pasforet = np.where ( checkForet, inconnu , -999 )
-'''
+
+checkForet = np.greater(inconnu, 50)
+pasforet = np.where ( checkForet, inconnu , 0 )
+
+
 np.seterr(divide='ignore', invalid='ignore')
 
-ndvi = np.empty(RasterForet.shape, dtype=rio.float32)
+check = np.logical_and ( conifere/feuillu > 0.8, conifere/feuillu < 1.2)
 
-check = np.logical_or ( feuillu > 0, conifere > 0 )
+mixte = np.where ( check, pasforet , 50 )
 
-ndvi = np.where ( check,  feuillu / conifere, -999 ) '''
+coniferew = np.where ( conifere > feuillu, mixte , 100 )
 
-show(pasforet)
+check3 = np.logical_and ( conifere < feuillu , coniferew != 50, coniferew != 0)
+
+feuilluw = np.where ( check3, coniferew , 200 )
+
+ep.plot_bands(coniferew)
+plt.show()
