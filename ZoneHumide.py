@@ -1,7 +1,7 @@
 from generic import *
 
 
-def zonesHumides(dir, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIData):
+def zonesHumides(dir, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIData):
     # Répertoire où les données seront enregistrées.
     zonesHumidesDir = dir + r"\Zones humides"
 

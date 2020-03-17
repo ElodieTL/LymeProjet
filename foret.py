@@ -30,36 +30,43 @@ if not os.path.exists(pathClass):
     fileName = os.path.basename(pathClass)
     print("Classifying raster " + fileName + "...")
 
-    imgAll = cv2.imread(re.sub(r"\\", r"\\\\", pathAll), -1)
-    rows, cols = imgAll.shape[:2]
+    rasterAll = gdal.Open(pathAll, gdal.GA_ReadOnly)
+    rasterAllBand0 = rasterAll.GetRasterBand(1).ReadAsArray()
+    rasterAllBand1 = rasterAll.GetRasterBand(2).ReadAsArray()
+    rasterAllBand2 = rasterAll.GetRasterBand(3).ReadAsArray()
 
-    imgClass = np.ones((rows, cols, 3), np.uint8) * 255
+    for i in range(rasterAll.RasterYSize):
+        for j in range(rasterAll.RasterXSize):
+            if rasterAllBand0[i, j] == 0 and rasterAllBand1[i, j] == 0 and rasterAllBand2[i, j] == 0:  # Aucune forêt
+                rasterAllBand0[i, j] = 0
+                rasterAllBand1[i, j] = 0  # Noir
+                rasterAllBand2[i, j] = 0
 
-    for i in range(rows):
-        for j in range(cols):
-            if imgAll[i, j, 0] == 0 and imgAll[i, j, 1] == 0 and imgAll[i, j, 2] == 0:  # Aucune forêt.
-                imgClass[i, j, 0] = 0
-                imgClass[i, j, 1] = 0  # Noir
-                imgClass[i, j, 2] = 0
+            elif rasterAllBand0[i, j] > 50:  # Feuillus
+                rasterAllBand0[i, j] = 0
+                rasterAllBand1[i, j] = 255  # Vert
+                rasterAllBand2[i, j] = 0
 
-            elif imgAll[i, j, 0] > 50:  # Inconnu
-                imgClass[i, j, 0] = 0
-                imgClass[i, j, 1] = 0  # Vert pâle
-                imgClass[i, j, 2] = 0
+            elif rasterAllBand1[i, j] > 50:  # Conifères
+                rasterAllBand0[i, j] = 0
+                rasterAllBand1[i, j] = 75  # Vert foncé
+                rasterAllBand2[i, j] = 0
 
-            elif imgAll[i, j, 1] > 50:  # Conifères
-                imgClass[i, j, 0] = 0
-                imgClass[i, j, 1] = 75  # Vert foncé
-                imgClass[i, j, 2] = 0
+            elif rasterAllBand2[i, j] > 50:  # Inconnu
+                rasterAllBand0[i, j] = 0
+                rasterAllBand1[i, j] = 0  # Noir
+                rasterAllBand2[i, j] = 0
 
-            elif imgAll[i, j, 2] > 50:  # Feuillus
-                imgClass[i, j, 0] = 0
-                imgClass[i, j, 1] = 255  # Noir
-                imgClass[i, j, 2] = 0
+            else:  # Mixte
+                rasterAllBand0[i, j] = 255
+                rasterAllBand1[i, j] = 255  # Jaune
+                rasterAllBand2[i, j] = 0
 
-            else:  # Forêt mixte
-                imgClass[i, j, 0] = 0
-                imgClass[i, j, 1] = 255  # Jaune
-                imgClass[i, j, 2] = 255
+    rasterClass = gdal.GetDriverByName("GTiff").Create(pathClass, rasterAll.RasterXSize, rasterAll.RasterYSize, 3)
+    rasterClass.GetRasterBand(1).WriteArray(rasterAllBand0)
+    rasterClass.GetRasterBand(2).WriteArray(rasterAllBand1)
+    rasterClass.GetRasterBand(3).WriteArray(rasterAllBand2)
 
-    cv2.imwrite(pathClass, imgClass)
+    rasterClass.SetProjection(rasterAll.GetProjection())
+    rasterClass.SetGeoTransform(rasterAll.GetGeoTransform())
+    rasterClass.FlushCache()

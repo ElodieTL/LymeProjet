@@ -1,7 +1,7 @@
 from generic import *
 
 
-def parcs(dir, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIData):
+def parcs(dir, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIData):
     # Répertoire où les données seront enregistrées.
     parcsDir = dir + r"\Parcs"
 

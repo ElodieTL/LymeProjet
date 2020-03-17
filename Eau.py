@@ -1,7 +1,7 @@
 from generic import *
 
 
-def eau(dir, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIData):
+def eau(dir, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIData):
     # Répertoire où les données seront enregistrées.
     eauDir = dir + r"\Eau"
 

@@ -1,11 +1,12 @@
 from generic import *
 
 
-def foret(dir, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataJson):
+def foret(dir, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataJson):
     # Répertoire où les données seront enregistrées.
     foretsDir = dir + r"\Foret"
 
     # Liste de liens menant aux données.
+
     urlListF = [
         "http://ftp.geogratis.gc.ca/pub/nrcan_rncan/Forests_Foret/canada-forests-attributes_attributs-forests-canada/2011-attributes_attributs-2011/NFI_MODIS250m_2011_kNN_SpeciesGroups_Broadleaf_Spp_v1.tif",
         "http://ftp.geogratis.gc.ca/pub/nrcan_rncan/Forests_Foret/canada-forests-attributes_attributs-forests-canada/2011-attributes_attributs-2011/NFI_MODIS250m_2011_kNN_SpeciesGroups_Needleleaf_Spp_v1.tif",
