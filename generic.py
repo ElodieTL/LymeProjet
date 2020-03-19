@@ -23,6 +23,7 @@ from osgeo import ogr
 from pyunpack import Archive
 import glob
 import sys
+import pandas as pd
 
 
 # Fonction permettant d'extraire le code EPSG (la projection) d'une donnée vectorielle.

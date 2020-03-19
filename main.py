@@ -100,17 +100,17 @@ def main(dataDir, ROIPathVector, ROIPathRaster, detList, sourcesList, pixelSize)
         if detList[1] == 1:
             sources = sourcesList[1]
             """ Traitement des données pour le déterminant Zones humides """
-            zonesHumides(dataDir, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector)
+            zonesHumides(dataDir, "Zones humides", sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector)
 
         if detList[2] == 1:
             sources = sourcesList[2]
             """ Traitement des données pour le déterminant Eau """
-            eau(dataDir, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector)
+            eau(dataDir, "Eau", sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector)
 
         if detList[3] == 1:
             sources = sourcesList[3]
             """ Traitement des données pour le déterminant Parcs """
-            parcs(dataDir, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector)
+            parcs(dataDir, "Parcs", sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector)
 
     else:
         print("No projection detected for ROI. Impossible to proceed.")
@@ -165,21 +165,21 @@ if __name__ == "__main__":
     listParcs.grid(row=5, column=2, columnspan=2)
     listParcs.insert(END, "MERN")
 
-    labelDir = Label(mainWindow, text="Directory:")
+    labelDir = Label(mainWindow, text="Data Directory:")
     labelDir.grid(row=6, column=0)
     entryDir = Entry(mainWindow)
     entryDir.grid(row=6, column=1, columnspan=2)
     buttonDir = Button(mainWindow, text="...", command=getDir)
     buttonDir.grid(row=6, column=3)
 
-    labelVec = Label(mainWindow, text="Base Vector:")
+    labelVec = Label(mainWindow, text="ROI Vector:")
     labelVec.grid(row=7, column=0)
     entryVec = Entry(mainWindow)
     entryVec.grid(row=7, column=1, columnspan=2)
     buttonVec = Button(mainWindow, text="...", command=getFileVector)
     buttonVec.grid(row=7, column=3)
 
-    labelRaster = Label(mainWindow, text="Base Raster:")
+    labelRaster = Label(mainWindow, text="ROI Raster:")
     labelRaster.grid(row=8, column=0)
     entryRaster = Entry(mainWindow)
     entryRaster.grid(row=8, column=1, columnspan=2)
