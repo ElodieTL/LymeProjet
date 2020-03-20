@@ -25,7 +25,7 @@ def zonesHumides(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster,
         outPath = os.path.join(detDir, os.path.basename(url))
 
         # Vérifier si la donnée téléchargée est compressée.
-        if outPath[-3:] in ["rar", "zip"]:
+        if outPath[-4:] in [".rar", ".zip"]:
             compress = True
 
         else:

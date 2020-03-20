@@ -25,7 +25,7 @@ def eau(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIData)
         outPath = os.path.join(detDir, os.path.basename(url))
 
         # Vérifier si la donnée téléchargée est compressée.
-        if outPath[-3:] in ["rar", "zip"]:
+        if outPath[-4:] in [".rar", ".zip"]:
             compress = True
 
         else:

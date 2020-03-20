@@ -1,6 +1,7 @@
 from generic import *
 from tkinter import *
 from tkinter import filedialog
+from tkinter.tix import *
 from ZoneHumide import *
 from detForet import *
 from park import *
@@ -119,81 +120,97 @@ def main(dataDir, ROIPathVector, ROIPathRaster, detList, sourcesList, pixelSize)
 if __name__ == "__main__":
     mainWindow = Tk()
     mainWindow.title("Fusion et classification de déterminants environnementaux")
+    mainWindow.geometry("260x500")
 
-    labelTitre = Label(mainWindow, text="Maladie de Lyme")
+    scrollbar = Scrollbar(mainWindow)
+
+    canvas = Canvas(mainWindow, yscrollcommand=scrollbar.set)
+
+    scrollbar.config(command=canvas.yview)
+    scrollbar.pack(side=RIGHT, fill=Y)
+
+    frame = Frame(canvas)
+    canvas.pack(side=LEFT, fill=BOTH, expand=TRUE)
+
+    canvas.create_window(0, 0, window=frame, anchor=NW)
+
+    labelTitre = Label(frame, text="Maladie de Lyme")
     labelTitre.grid(row=0, columnspan=4)
 
-    labelDet = Label(mainWindow, text="Déterminant")
+    labelDet = Label(frame, text="Déterminant")
     labelDet.grid(row=1, column=0)
 
-    labelSources = Label(mainWindow, text="Source(s)")
+    labelSources = Label(frame, text="Source(s)")
     labelSources.grid(row=1, column=2, columnspan=2)
 
-    labelForet = Label(mainWindow, text="Forêt")
+    labelForet = Label(frame, text="Forêt")
     labelForet.grid(row=2, column=0)
     varForet = IntVar()
-    checkForet = Checkbutton(mainWindow, variable=varForet)
+    checkForet = Checkbutton(frame, variable=varForet)
     checkForet.grid(row=2, column=1)
-    listForet = Listbox(mainWindow, selectmode=MULTIPLE, exportselection=0)
+    listForet = Listbox(frame, selectmode=MULTIPLE, exportselection=0)
     listForet.grid(row=2, column=2, columnspan=2)
     listForet.insert(END, "RN Canada")
 
-    labelZonesHumides = Label(mainWindow, text="Zones humides")
+    labelZonesHumides = Label(frame, text="Zones humides")
     labelZonesHumides.grid(row=3, column=0)
     varZonesHumides = IntVar()
-    checkZonesHumides = Checkbutton(mainWindow, variable=varZonesHumides)
+    checkZonesHumides = Checkbutton(frame, variable=varZonesHumides)
     checkZonesHumides.grid(row=3, column=1)
-    listZonesHumides = Listbox(mainWindow, selectmode=MULTIPLE, exportselection=0)
+    listZonesHumides = Listbox(frame, selectmode=MULTIPLE, exportselection=0)
     listZonesHumides.grid(row=3, column=2, columnspan=2)
     listZonesHumides.insert(END, "Canards illimités")
 
-    labelEau = Label(mainWindow, text="Eau")
+    labelEau = Label(frame, text="Eau")
     labelEau.grid(row=4, column=0)
     varEau = IntVar()
-    checkEau = Checkbutton(mainWindow, variable=varEau)
+    checkEau = Checkbutton(frame, variable=varEau)
     checkEau.grid(row=4, column=1)
-    listEau = Listbox(mainWindow, selectmode=MULTIPLE, exportselection=0)
+    listEau = Listbox(frame, selectmode=MULTIPLE, exportselection=0)
     listEau.grid(row=4, column=2, columnspan=2)
     listEau.insert(END, "CanVec")
 
-    labelParcs = Label(mainWindow, text="Parcs")
+    labelParcs = Label(frame, text="Parcs")
     labelParcs.grid(row=5, column=0)
     varParcs = IntVar()
-    checkParcs = Checkbutton(mainWindow, variable=varParcs)
+    checkParcs = Checkbutton(frame, variable=varParcs)
     checkParcs.grid(row=5, column=1)
-    listParcs = Listbox(mainWindow, selectmode=MULTIPLE, exportselection=0)
+    listParcs = Listbox(frame, selectmode=MULTIPLE, exportselection=0)
     listParcs.grid(row=5, column=2, columnspan=2)
     listParcs.insert(END, "MERN")
 
-    labelDir = Label(mainWindow, text="Data Directory:")
+    labelDir = Label(frame, text="Data Directory:")
     labelDir.grid(row=6, column=0)
-    entryDir = Entry(mainWindow)
+    entryDir = Entry(frame)
     entryDir.grid(row=6, column=1, columnspan=2)
-    buttonDir = Button(mainWindow, text="...", command=getDir)
+    buttonDir = Button(frame, text="...", command=getDir)
     buttonDir.grid(row=6, column=3)
 
-    labelVec = Label(mainWindow, text="ROI Vector:")
+    labelVec = Label(frame, text="ROI Vector:")
     labelVec.grid(row=7, column=0)
-    entryVec = Entry(mainWindow)
+    entryVec = Entry(frame)
     entryVec.grid(row=7, column=1, columnspan=2)
-    buttonVec = Button(mainWindow, text="...", command=getFileVector)
+    buttonVec = Button(frame, text="...", command=getFileVector)
     buttonVec.grid(row=7, column=3)
 
-    labelRaster = Label(mainWindow, text="ROI Raster:")
+    labelRaster = Label(frame, text="ROI Raster:")
     labelRaster.grid(row=8, column=0)
-    entryRaster = Entry(mainWindow)
+    entryRaster = Entry(frame)
     entryRaster.grid(row=8, column=1, columnspan=2)
-    buttonRaster = Button(mainWindow, text="...", command=getFileRaster)
+    buttonRaster = Button(frame, text="...", command=getFileRaster)
     buttonRaster.grid(row=8, column=3)
 
-    labelPixel = Label(mainWindow, text="Pixel Size:")
+    labelPixel = Label(frame, text="Pixel Size:")
     labelPixel.grid(row=9, column=0)
-    entryPixel = Entry(mainWindow)
+    entryPixel = Entry(frame)
     entryPixel.grid(row=9, column=1, columnspan=2)
 
-    buttonOK = Button(mainWindow, text="OK", command=getValues)
+    buttonOK = Button(frame, text="OK", command=getValues)
     buttonOK.grid(row=10, column=1)
-    buttonQuit = Button(mainWindow, text="Quit", command=sys.exit)
+    buttonQuit = Button(frame, text="Quit", command=sys.exit)
     buttonQuit.grid(row=10, column=2)
+
+    mainWindow.update()
+    canvas.config(scrollregion=canvas.bbox(ALL))
 
     mainWindow.mainloop()
