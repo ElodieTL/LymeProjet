@@ -1,4 +1,4 @@
-name: untitled
+name: projet
 channels:
   - conda-forge
   - defaults
@@ -203,5 +203,5 @@ dependencies:
     - pyqtwebengine==5.12.1
     - tqdm==4.42.0
     - urllib3==1.25.8
-prefix: C:\Users\maxla\Anaconda3\envs\untitled
+prefix: C:\Users\maxla\Anaconda3\envs\projet
 

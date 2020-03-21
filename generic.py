@@ -32,7 +32,8 @@ import pandas as pd
 # vectorDataCRSStr: String représentant le code EPSG de la projection utilisée (EPSG:#).
 def extractEPSGVector(vectorData):
     # Extraire le code EPSG (la projection) du fichier vectoriel.
-    vectorDataCRS = re.search("epsg:(.*)", str(vectorData.crs))
+    srs = vectorData.crs
+    vectorDataCRS = re.search("epsg:(.*)", str(srs))
 
     # Si une projection existe, extraire le code numérique et un String pour d'autres fonctions.
     if vectorDataCRS is not None:
@@ -146,7 +147,7 @@ def reprojectRaster(inPath, outPath, dstCRS):
 
     # Extraire les métadonnées.
     with rio.open(inPath) as src:
-        transform, width, height = calculate_default_transform(src.crs, dst_crs, src.width, src.height, *src.bounds)
+        transform, width, height = calculate_default_transform(src.crs, dstCRS, src.width, src.height, *src.bounds)
         kwargs = src.meta.copy()
         kwargs.update({"crs": dstCRS, "transform": transform, "width": width, "height": height})
 

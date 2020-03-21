@@ -1,7 +1,7 @@
 from generic import *
 
 
-def RasterData(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataJson):
+def rasterData(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataJson):
     # Répertoire où les données seront enregistrées.
     detDir = dir + r"\\" + det
 
@@ -61,4 +61,4 @@ def RasterData(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, R
                     resampleRaster(outPathClip, ROIPathRaster, outPathResample)
 
             else:
-                print("No projection detected for raster " + outPath + ". Impossible to proceed.")
+                print("No projection detected for file " + outPath + ". Impossible to proceed.")

@@ -62,4 +62,4 @@ def parcs(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDat
                     rasteriseVector(outPathClip, ROIPathRaster, outPathRaster)
 
             else:
-                print("No projection detected for raster " + outPath + ". Impossible to proceed.")
+                print("No projection detected for file " + outPath + ". Impossible to proceed.")
