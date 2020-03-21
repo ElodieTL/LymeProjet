@@ -6,6 +6,8 @@ from ZoneHumide import *
 from detForet import *
 from park import *
 from Eau import *
+from RasterData import *
+from vecteurData import *
 
 # Fonction permettant d'extraire les informations demandées par l'utilisateur dans l'application.
 def getValues():
@@ -96,22 +98,22 @@ def main(dataDir, ROIPathVector, ROIPathRaster, detList, sourcesList, pixelSize)
         if detList[0] == 1:
             sources = sourcesList[0]
             """ Traitement des données pour le déterminant Forêt """
-            foret(dataDir, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVectorJson)
+            RasterData(dataDir, "Foret", sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVectorJson)
 
         if detList[1] == 1:
             sources = sourcesList[1]
             """ Traitement des données pour le déterminant Zones humides """
-            zonesHumides(dataDir, "Zones humides", sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector)
+            vecteurData(dataDir, "Zones humides", sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector)
 
         if detList[2] == 1:
             sources = sourcesList[2]
             """ Traitement des données pour le déterminant Eau """
-            eau(dataDir, "Eau", sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector)
+            vecteurData(dataDir, "Eau", sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector)
 
         if detList[3] == 1:
             sources = sourcesList[3]
             """ Traitement des données pour le déterminant Parcs """
-            parcs(dataDir, "Parcs", sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector)
+            vecteurData(dataDir, "Parcs", sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector)
 
     else:
         print("No projection detected for ROI. Impossible to proceed.")
@@ -182,13 +184,15 @@ if __name__ == "__main__":
     labelDir = Label(frame, text="Data Directory:")
     labelDir.grid(row=6, column=0)
     entryDir = Entry(frame)
+
     entryDir.grid(row=6, column=1, columnspan=2)
     buttonDir = Button(frame, text="...", command=getDir)
     buttonDir.grid(row=6, column=3)
-
+    entryDir.insert(END, 'Z:\GALAL35\Projet_lyme\Donnees')
     labelVec = Label(frame, text="ROI Vector:")
     labelVec.grid(row=7, column=0)
     entryVec = Entry(frame)
+    entryVec.insert(END, 'Z:\GALAL35\Projet_lyme\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp')
     entryVec.grid(row=7, column=1, columnspan=2)
     buttonVec = Button(frame, text="...", command=getFileVector)
     buttonVec.grid(row=7, column=3)
@@ -196,6 +200,7 @@ if __name__ == "__main__":
     labelRaster = Label(frame, text="ROI Raster:")
     labelRaster.grid(row=8, column=0)
     entryRaster = Entry(frame)
+    entryRaster.insert(END, 'Z:\GALAL35\Projet_lyme\Donnees\ROI_Projet_Genie_Maladies_Vectorielles_v2_30.tif')
     entryRaster.grid(row=8, column=1, columnspan=2)
     buttonRaster = Button(frame, text="...", command=getFileRaster)
     buttonRaster.grid(row=8, column=3)
@@ -203,6 +208,7 @@ if __name__ == "__main__":
     labelPixel = Label(frame, text="Pixel Size:")
     labelPixel.grid(row=9, column=0)
     entryPixel = Entry(frame)
+    entryPixel.insert(END, '30')
     entryPixel.grid(row=9, column=1, columnspan=2)
 
     buttonOK = Button(frame, text="OK", command=getValues)
