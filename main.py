@@ -20,6 +20,7 @@ def getValues():
     detsList.append(varZonesHumides.get())
     detsList.append(varEau.get())
     detsList.append(varParcs.get())
+    detsList.append(varZonesAgricoles.get())
 
     # Créer une liste vide des sources qui seront traitées.
     sourcesListMaster = []
@@ -43,6 +44,9 @@ def getValues():
             for id in listParcs.curselection():
                 sourcesListDet.append(listParcs.get(id))
 
+        elif i == 4:
+            for id in listZonesAgricoles.curselection():
+                sourcesListDet.append(listZonesAgricoles.get(id))
         sourcesListMaster.append(sourcesListDet)
 
     # Récupérer le répertoire entré par l'utilisateur.
@@ -168,43 +172,52 @@ if __name__ == "__main__":
     listParcs.grid(row=5, column=2, columnspan=2)
     listParcs.insert(END, "MERN")
 
+    labelZonesAgricoles = Label(frame, text="Zones agricoles")
+    labelZonesAgricoles.grid(row=6, column=0)
+    varZonesAgricoles = IntVar()
+    checkZonesAgricoles = Checkbutton(frame, variable=varZonesAgricoles)
+    checkZonesAgricoles.grid(row=6, column=1)
+    listZonesAgricoles = Listbox(frame, selectmode=MULTIPLE, exportselection=0)
+    listZonesAgricoles.grid(row=6, column=2, columnspan=2)
+    listZonesAgricoles.insert(END, "CPTAQ")
+
     labelDir = Label(frame, text="Data Directory:")
-    labelDir.grid(row=6, column=0)
+    labelDir.grid(row=7, column=0)
     entryDir = Entry(frame)
 
-    entryDir.grid(row=6, column=1, columnspan=2)
+    entryDir.grid(row=7, column=1, columnspan=2)
     buttonDir = Button(frame, text="...", command=getDir)
-    buttonDir.grid(row=6, column=3)
-    entryDir.insert(END, "D:\Donnees")
-    # entryDir.insert(END, "Z:\GALAL35\Projet_lyme\Donnees")
+    buttonDir.grid(row=7, column=3)
+    #entryDir.insert(END, "D:\Donnees")
+    entryDir.insert(END, "Z:\GALAL35\Projet_lyme\Donnees")
     labelVec = Label(frame, text="ROI Vector:")
-    labelVec.grid(row=7, column=0)
+    labelVec.grid(row=8, column=0)
     entryVec = Entry(frame)
-    entryVec.insert(END, "Z:\MALAM357\GMT-3051 Projet en génie géomatique II\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp")
-    # entryVec.insert(END, "Z:\GALAL35\Projet_lyme\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp")
-    entryVec.grid(row=7, column=1, columnspan=2)
+    #entryVec.insert(END, "Z:\MALAM357\GMT-3051 Projet en génie géomatique II\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp")
+    entryVec.insert(END, "Z:\GALAL35\Projet_lyme\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp")
+    entryVec.grid(row=8, column=1, columnspan=2)
     buttonVec = Button(frame, text="...", command=getFileVector)
-    buttonVec.grid(row=7, column=3)
+    buttonVec.grid(row=8, column=3)
 
     labelRaster = Label(frame, text="ROI Raster:")
-    labelRaster.grid(row=8, column=0)
+    labelRaster.grid(row=9, column=0)
     entryRaster = Entry(frame)
-    entryRaster.insert(END, "Z:\MALAM357\GMT-3051 Projet en génie géomatique II\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2_30.tif")
-    # entryRaster.insert(END, "Z:\GALAL35\Projet_lyme\Donnees\ROI_Projet_Genie_Maladies_Vectorielles_v2_30.tif")
-    entryRaster.grid(row=8, column=1, columnspan=2)
+    #entryRaster.insert(END, "Z:\MALAM357\GMT-3051 Projet en génie géomatique II\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2_30.tif")
+    entryRaster.insert(END, "Z:\GALAL35\Projet_lyme\Donnees\ROI_Projet_Genie_Maladies_Vectorielles_v2_30.tif")
+    entryRaster.grid(row=9, column=1, columnspan=2)
     buttonRaster = Button(frame, text="...", command=getFileRaster)
-    buttonRaster.grid(row=8, column=3)
+    buttonRaster.grid(row=9, column=3)
 
     labelPixel = Label(frame, text="Pixel Size:")
-    labelPixel.grid(row=9, column=0)
+    labelPixel.grid(row=10, column=0)
     entryPixel = Entry(frame)
     entryPixel.insert(END, "30")
-    entryPixel.grid(row=9, column=1, columnspan=2)
+    entryPixel.grid(row=10, column=1, columnspan=2)
 
     buttonOK = Button(frame, text="OK", command=getValues)
-    buttonOK.grid(row=10, column=1)
+    buttonOK.grid(row=11, column=1)
     buttonQuit = Button(frame, text="Quit", command=sys.exit)
-    buttonQuit.grid(row=10, column=2)
+    buttonQuit.grid(row=11, column=2)
 
     mainWindow.update()
     canvas.config(scrollregion=canvas.bbox(ALL))

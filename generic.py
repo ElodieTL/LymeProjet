@@ -288,7 +288,9 @@ def resampleRaster(inPath, inPathRef, outPath):
 # inPathVector: String représentant le chemin vers le fichier vectoriel entrant.
 # inPathRaster: String représentant le chemin vers le fichier raster servant de référence.
 # outPath: String représentant le chemin vers le fichier raster sortant.
-def rasteriseVector(inPathVector, inPathRaster, outPath):
+# champs: String représentant le champs où sélectionner les données pertinentes
+# valeur: String représentant la valeur des données pertinentes qui doivent être rasterisées
+def rasteriseVector(inPathVector, inPathRaster, outPath, champs, valeur):
     fileName = os.path.basename(inPathVector)
     print("Rasterising " + fileName + "...")
 
@@ -301,6 +303,11 @@ def rasteriseVector(inPathVector, inPathRaster, outPath):
     out.SetProjection(rasterRef.GetProjectionRef())
     out.SetGeoTransform(rasterRef.GetGeoTransform())
 
-    band = out.GetRasterBand(1)
-    band.SetNoDataValue(0)
+    if valeur is not None:
+        SQL = champs + "='" + valeur + "'"
+        vectorLayer.SetAttributeFilter(SQL)
+    else:
+        band = out.GetRasterBand(1)
+        band.SetNoDataValue(0)
+
     gdal.RasterizeLayer(out, [1], vectorLayer, burn_values=[1])

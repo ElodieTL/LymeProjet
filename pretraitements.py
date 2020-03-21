@@ -14,6 +14,9 @@ def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaste
     elif det == 3:
         det = "Parcs"
 
+    elif det == 4:
+        det = "Zones agricoles"
+
     # Répertoire où les données seront enregistrées.
     detDir = dir + r"\\" + det
 
@@ -26,7 +29,7 @@ def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaste
 
     # Ajout des liens à la liste.
     for row in detSources.itertuples():
-        urlList.append([row.Liens, row.Types])
+        urlList.append([row.Liens, row.Types, row.Champs, row.Valeur])
 
     # Créer le répertoire où sera contenu les données, s'il n'existe pas.
     createDir(detDir)
@@ -35,6 +38,9 @@ def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaste
     for url in urlList:
         # Type courant.
         type = url[1]
+        # Champs et valeur où récupérer les données pertinentes si applicables
+        champs = url[2]
+        valeur = url[3]
 
         # Spécifier le lien vers le fichier en sortie.
         outPath = os.path.join(detDir, os.path.basename(url[0]))
@@ -98,7 +104,7 @@ def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaste
 
                         # Si le fichier vectoriel n'est pas rasterisé.
                         if not os.path.exists(outPathRaster) and (clip or os.path.exists(outPathClip)):
-                            rasteriseVector(outPathClip, ROIPathRaster, outPathRaster)
+                            rasteriseVector(outPathClip, ROIPathRaster, outPathRaster, champs, valeur)
 
             else:
                 print("No projection detected for raster " + outPath + ". Impossible to proceed.")
