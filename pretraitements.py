@@ -1,7 +1,17 @@
 from generic import *
 
-
-def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIData, ROIDataJson):
+""" Fonction permettant de faire les prétraitements pour chaque déterminant et chaque source de données. """
+# dir: String représentant le répertoire où seront enregistrées les données.
+# det: entier représentant le déterminant courant.
+# sources: Liste contenant les sources de données devant être traitées pour le déterminant courant.
+# pixelSize: String représentant la taille d'un pixel (utilisé pour les noms de fichiers).
+# ROICRSStr: String représentant le code EPSG de la donnée vectorielle de référence (EPSG:#).
+# ROICRS: String représentant le code EPSG de la donnée vectorielle de référence (#).
+# ROIPathRaster: String représentant le chemin du fichier raster de référence.
+# ROIDataVector: Objet de type geopandas représentant le fichier vectoriel de référence.
+# ROIDataJson: Objet de type JSON représentant la géométrie du fichier vectoriel de référence au format JSON.
+def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector, ROIDataJson):
+    # Codification du déterminant courant en String.
     if det == 0:
         det = "Foret"
 
@@ -17,32 +27,30 @@ def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaste
     elif det == 4:
         det = "Zones agricoles"
 
-    # Répertoire où les données seront enregistrées.
-    detDir = dir + r"\\" + det
+    # Répertoire où les données seront enregistrées selon le déterminant courant.
+    detDir = dir + "\\" + det
 
+    # Extraction des liens URL menant aux données et d'autres données du fichier Excel.
     sourcesList = pd.read_excel("ListeSources.xlsx")
     det = sourcesList.loc[sourcesList["Determinant"] == det]
     detSources = det.loc[det["Sources"].isin(sources)]
 
-    # Initialisation d'une liste de liens menant aux données.
-    urlList = []
+    # Création d'une liste de liens URL menant aux données et d'autres données.
+    urlList = [[row.Liens, row.Types, row.Champs, row.Valeur] for row in detSources.itertuples()]
 
-    # Ajout des liens à la liste.
-    for row in detSources.itertuples():
-        urlList.append([row.Liens, row.Types, row.Champs, row.Valeur])
-
-    # Créer le répertoire où sera contenu les données, s'il n'existe pas.
+    # Création du répertoire où sera contenu les données selon le déterminant courant, s'il n'existe pas.
     createDir(detDir)
 
-    # Pour chaque lien de la liste fournie.
+    # Pour chaque lien de la liste de liens.
     for url in urlList:
-        # Type courant.
+        # Type courant (Raster ou Vecteur).
         type = url[1]
-        # Champs et valeur où récupérer les données pertinentes si applicables
+
+        # Champs et valeur où récupérer les données pertinentes, si applicable.
         champs = url[2]
         valeur = url[3]
 
-        # Spécifier le lien vers le fichier en sortie.
+        # Spécifier le chemin du fichier qui sera téléchargé.
         outPath = os.path.join(detDir, os.path.basename(url[0]))
 
         # Vérifier si la donnée téléchargée est compressée.
@@ -52,7 +60,7 @@ def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaste
         else:
             compress = False
 
-        # Si la donnée d'origine n'a pas été téléchargée ou n'existe pas.
+        # Si la donnée d'origine n'a pas été téléchargée ou n'existe pas, on la télécharge.
         if not os.path.exists(outPath):
             downloadData(url[0], outPath, detDir, compress)
 
@@ -100,7 +108,7 @@ def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaste
 
                         clip = False
                         if not os.path.exists(outPathClip):
-                            clip = clipVector(outPathReproject, outPathClip, ROIData)
+                            clip = clipVector(outPathReproject, outPathClip, ROIDataVector)
 
                         # Si le fichier vectoriel n'est pas rasterisé.
                         if not os.path.exists(outPathRaster) and (clip or os.path.exists(outPathClip)):
