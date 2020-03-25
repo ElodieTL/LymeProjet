@@ -36,7 +36,7 @@ def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaste
     detSources = det.loc[det["Sources"].isin(sources)]
 
     # Création d'une liste de liens URL menant aux données et d'autres données.
-    urlList = [[row.Liens, row.Types, row.Champs, row.Valeur] for row in detSources.itertuples()]
+    urlList = [[row.Liens, row.Types, row.Champs, row.Valeur, row.Nom] for row in detSources.itertuples()]
 
     # Création du répertoire où sera contenu les données selon le déterminant courant, s'il n'existe pas.
     createDir(detDir)
@@ -50,15 +50,30 @@ def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaste
         champs = url[2]
         valeur = url[3]
 
+        # Nom de bases des fichiers de sortie
+        nom = url[4]
+
         # Spécifier le chemin du fichier qui sera téléchargé.
-        outPath = os.path.join(detDir, os.path.basename(url[0]))
+        outPath = os.path.join(detDir, nom)
+        #outPath = os.path.join(detDir, os.path.basename(url[0]))
 
         # Vérifier si la donnée téléchargée est compressée.
-        if outPath[-4:] in [".rar", ".zip"]:
+        if os.path.basename(url[0])[-4:] in [".zip"]:
             compress = True
+            outPath= outPath + ".zip"
 
-        else:
+        elif os.path.basename(url[0])[-4:] in [".rar"]:
+            compress = True
+            outPath = outPath + ".rar"
+
+        elif os.path.basename(url[0])[-4:] in [".tif"]:
             compress = False
+            outPath = outPath + ".tif"
+
+        elif os.path.basename(url[0])[-4:] in [".shp"]:
+            compress = False
+            outPath = outPath + ".shp"
+
 
         # Si la donnée d'origine n'a pas été téléchargée ou n'existe pas, on la télécharge.
         if not os.path.exists(outPath):

@@ -208,8 +208,8 @@ if __name__ == "__main__":
     entryDir.grid(row=7, column=1, columnspan=2)
     buttonDir = Button(frame, text="...", command=getDir)
     buttonDir.grid(row=7, column=3)
-    entryDir.insert(END, "D:\Donnees")
-    # entryDir.insert(END, "Z:\GALAL35\Projet_lyme\Donnees")
+    #entryDir.insert(END, "D:\Donnees")
+    entryDir.insert(END, "Z:\GMT3051\Donnees")
 
     # Ajout d'une entrée et d'un bouton pour entrer le chemin vers le fichier vectoriel de référence.
     labelVec = Label(frame, text="ROI Vector:")
@@ -218,8 +218,8 @@ if __name__ == "__main__":
     entryVec.grid(row=8, column=1, columnspan=2)
     buttonVec = Button(frame, text="...", command=getFileVector)
     buttonVec.grid(row=8, column=3)
-    entryVec.insert(END, "Z:\MALAM357\GMT-3051 Projet en génie géomatique II\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp")
-    # entryVec.insert(END, "Z:\GALAL35\Projet_lyme\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp")
+    #entryVec.insert(END, "Z:\MALAM357\GMT-3051 Projet en génie géomatique II\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp")
+    entryVec.insert(END, "Z:\GMT3051\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp")
 
     # Ajout d'une entrée et d'un bouton pour entrer le chemin vers le fichier raster de référence.
     labelRaster = Label(frame, text="ROI Raster:")
@@ -228,8 +228,8 @@ if __name__ == "__main__":
     entryRaster.grid(row=9, column=1, columnspan=2)
     buttonRaster = Button(frame, text="...", command=getFileRaster)
     buttonRaster.grid(row=9, column=3)
-    entryRaster.insert(END, "Z:\MALAM357\GMT-3051 Projet en génie géomatique II\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2_30.tif")
-    # entryRaster.insert(END, "Z:\GALAL35\Projet_lyme\Donnees\ROI_Projet_Genie_Maladies_Vectorielles_v2_30.tif")
+    #entryRaster.insert(END, "Z:\MALAM357\GMT-3051 Projet en génie géomatique II\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2_30.tif")
+    entryRaster.insert(END, "Z:\GMT3051\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2_30.tif")
 
     # Ajout d'une entrée et d'un bouton pour entrer une taille de pixel.
     labelPixel = Label(frame, text="Pixel Size:")
