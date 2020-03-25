@@ -308,3 +308,51 @@ def rasteriseVector(inPathVector, inPathRaster, outPath, champs, valeur):
     gdal.RasterizeLayer(out, [1], vectorLayer, burn_values=[1])
 
     del out
+
+def rasterClassification(inPathImage1, inPathImage2, outPath):
+    if not os.path.exists(outPath):
+        fileName = os.path.basename(outPath)
+        print("Classifying raster " + fileName + "...")
+
+
+        rasterImage1 = gdal.Open(inPathImage1, gdal.GA_ReadOnly)
+        rasterImage2 = gdal.Open(inPathImage2, gdal.GA_ReadOnly)
+
+        if rasterImage1.RasterCount == 1:
+            rasterImage1B1 = rasterImage1.GetRasterBand(1).ReadAsArray()
+
+        elif rasterImage1.RasterCount == 3:
+            rasterImage1 = gdal.Open(inPathImage1, gdal.GA_ReadOnly)
+            rasterImage1B1 = rasterImage1.GetRasterBand(1).ReadAsArray()
+            rasterImage1B2 = rasterImage1.GetRasterBand(2).ReadAsArray()
+            rasterImage1B3 = rasterImage1.GetRasterBand(3).ReadAsArray()
+        else:
+            print("Nombre de bandes invalide")
+
+        if rasterImage2.RasterCount == 1:
+            rasterImage2B1 = rasterImage1.GetRasterBand(1).ReadAsArray()
+
+        elif rasterImage2.RasterCount == 3:
+            rasterImage2 = gdal.Open(inPathImage2, gdal.GA_ReadOnly)
+            rasterImage2B1 = rasterImage1.GetRasterBand(1).ReadAsArray()
+            rasterImage2B2 = rasterImage1.GetRasterBand(2).ReadAsArray()
+            rasterImage2B3 = rasterImage1.GetRasterBand(3).ReadAsArray()
+        else:
+            print("Nombre de bandes invalide")
+
+        for i in range(rasterImage2.RasterYSize):
+            for j in range(rasterImage2.RasterXSize):
+                if rasterImage2B1[i, j] == 1:  # Zone humide
+                    rasterImage1B1[i, j] = 255
+                    rasterImage1B2[i, j] = 0  # Rouge
+                    rasterImage1B3[i, j] = 0
+
+        rasterClass = gdal.GetDriverByName("GTiff").Create(outPath,
+                                                           rasterImage1.RasterXSize, rasterImage1.RasterYSize, 3)
+        rasterClass.GetRasterBand(1).WriteArray(rasterImage1B1)
+        rasterClass.GetRasterBand(2).WriteArray(rasterImage1B2)
+        rasterClass.GetRasterBand(3).WriteArray(rasterImage1B3)
+
+        rasterClass.SetProjection(rasterImage1.GetProjection())
+        rasterClass.SetGeoTransform(rasterImage1.GetGeoTransform())
+        rasterClass.FlushCache()
