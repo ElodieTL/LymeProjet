@@ -27,6 +27,15 @@ def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaste
     elif det == 4:
         det = "Zones agricoles"
 
+    elif det == 5:
+        det = "Voies de communication"
+
+    elif det == 6:
+        det = "Zones anthropisées"
+
+    elif det == 7:
+        det = "Couverture du sol"
+
     # Répertoire où les données seront enregistrées selon le déterminant courant.
     detDir = dir + "\\" + det
 
@@ -55,25 +64,15 @@ def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaste
 
         # Spécifier le chemin du fichier qui sera téléchargé.
         outPath = os.path.join(detDir, nom)
+        extension = os.path.basename(url[0])[-4:]
+        outPath = outPath + extension
         #outPath = os.path.join(detDir, os.path.basename(url[0]))
 
         # Vérifier si la donnée téléchargée est compressée.
-        if os.path.basename(url[0])[-4:] in [".zip"]:
+        if os.path.basename(url[0])[-4:] in [".zip", ".rar"]:
             compress = True
-            outPath= outPath + ".zip"
-
-        elif os.path.basename(url[0])[-4:] in [".rar"]:
-            compress = True
-            outPath = outPath + ".rar"
-
-        elif os.path.basename(url[0])[-4:] in [".tif"]:
+        else:
             compress = False
-            outPath = outPath + ".tif"
-
-        elif os.path.basename(url[0])[-4:] in [".shp"]:
-            compress = False
-            outPath = outPath + ".shp"
-
 
         # Si la donnée d'origine n'a pas été téléchargée ou n'existe pas, on la télécharge.
         if not os.path.exists(outPath):
@@ -124,6 +123,10 @@ def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaste
                         clip = False
                         if not os.path.exists(outPathClip):
                             clip = clipVector(outPathReproject, outPathClip, ROIDataVector)
+
+                            #if clip == False:
+                                #os.remove(outPath, outPathReproject)     à tester, les supprimer pour pas les traiter à chaque fois
+
 
                         # Si le fichier vectoriel n'est pas rasterisé.
                         if not os.path.exists(outPathRaster) and (clip or os.path.exists(outPathClip)):

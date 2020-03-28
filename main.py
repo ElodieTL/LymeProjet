@@ -14,6 +14,9 @@ def getValues():
     detsList.append(varEau.get())
     detsList.append(varParcs.get())
     detsList.append(varZonesAgricoles.get())
+    detsList.append(varVoiesCommunication.get())
+    detsList.append(varZonesAnthropisées.get())
+    detsList.append(varCouvertureSol.get())
 
     # Créer une liste vide des sources qui seront traitées.
     sourcesListMaster = []
@@ -40,6 +43,18 @@ def getValues():
         elif det == 4:
             for source in listZonesAgricoles.curselection():
                 sourcesListDet.append(listZonesAgricoles.get(source))
+
+        elif det == 5:
+            for source in listVoiesCommunication.curselection():
+                sourcesListDet.append(listVoiesCommunication.get(source))
+
+        elif det == 6:
+            for source in listZonesAnthropisées.curselection():
+                sourcesListDet.append(listZonesAnthropisées.get(source))
+
+        elif det == 7:
+            for source in listCouvertureSol.curselection():
+                sourcesListDet.append(listCouvertureSol.get(source))
 
         sourcesListMaster.append(sourcesListDet)
 
@@ -201,48 +216,78 @@ if __name__ == "__main__":
     listZonesAgricoles.grid(row=6, column=2, columnspan=2)
     listZonesAgricoles.insert(END, "CPTAQ")
 
+    # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Voies de communication.
+    labelVoiesCommunication = Label(frame, text="Voies de communication")
+    labelVoiesCommunication.grid(row=7, column=0)
+    varVoiesCommunication = IntVar()
+    checkVoiesCommunication = Checkbutton(frame, variable=varVoiesCommunication)
+    checkVoiesCommunication.grid(row=7, column=1)
+    listVoiesCommunication = Listbox(frame, selectmode=MULTIPLE, exportselection=0)
+    listVoiesCommunication.grid(row=7, column=2, columnspan=2)
+    listVoiesCommunication.insert(END, "CanVec")
+
+    # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Zones Anthropisées.
+    labelZonesAnthropisées = Label(frame, text="Zones Anthropisées")
+    labelZonesAnthropisées.grid(row=8, column=0)
+    varZonesAnthropisées = IntVar()
+    checkZonesAnthropisées = Checkbutton(frame, variable=varZonesAnthropisées)
+    checkZonesAnthropisées.grid(row=8, column=1)
+    listZonesAnthropisées = Listbox(frame, selectmode=MULTIPLE, exportselection=0)
+    listZonesAnthropisées.grid(row=8, column=2, columnspan=2)
+    listZonesAnthropisées.insert(END, "CanVec")
+
+    # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Couverture du Sol.
+    labelCouvertureSol = Label(frame, text="Couverture du Sol")
+    labelCouvertureSol.grid(row=9, column=0)
+    varCouvertureSol = IntVar()
+    checkCouvertureSol = Checkbutton(frame, variable=varCouvertureSol)
+    checkCouvertureSol.grid(row=9, column=1)
+    listCouvertureSol = Listbox(frame, selectmode=MULTIPLE, exportselection=0)
+    listCouvertureSol.grid(row=9, column=2, columnspan=2)
+    #listCouvertureSol.insert(END, "CanVec")
+
     # Ajout d'une entrée et d'un bouton pour entrer le chemin vers le répertoire où seront enregistré les données.
     labelDir = Label(frame, text="Data Directory:")
-    labelDir.grid(row=7, column=0)
+    labelDir.grid(row=10, column=0)
     entryDir = Entry(frame)
-    entryDir.grid(row=7, column=1, columnspan=2)
+    entryDir.grid(row=10, column=1, columnspan=2)
     buttonDir = Button(frame, text="...", command=getDir)
-    buttonDir.grid(row=7, column=3)
+    buttonDir.grid(row=10, column=3)
     #entryDir.insert(END, "D:\Donnees")
     entryDir.insert(END, "Z:\GMT3051\Donnees")
 
     # Ajout d'une entrée et d'un bouton pour entrer le chemin vers le fichier vectoriel de référence.
     labelVec = Label(frame, text="ROI Vector:")
-    labelVec.grid(row=8, column=0)
+    labelVec.grid(row=11, column=0)
     entryVec = Entry(frame)
-    entryVec.grid(row=8, column=1, columnspan=2)
+    entryVec.grid(row=11, column=1, columnspan=2)
     buttonVec = Button(frame, text="...", command=getFileVector)
-    buttonVec.grid(row=8, column=3)
+    buttonVec.grid(row=11, column=3)
     #entryVec.insert(END, "Z:\MALAM357\GMT-3051 Projet en génie géomatique II\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp")
     entryVec.insert(END, "Z:\GMT3051\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp")
 
     # Ajout d'une entrée et d'un bouton pour entrer le chemin vers le fichier raster de référence.
     labelRaster = Label(frame, text="ROI Raster:")
-    labelRaster.grid(row=9, column=0)
+    labelRaster.grid(row=12, column=0)
     entryRaster = Entry(frame)
-    entryRaster.grid(row=9, column=1, columnspan=2)
+    entryRaster.grid(row=12, column=1, columnspan=2)
     buttonRaster = Button(frame, text="...", command=getFileRaster)
-    buttonRaster.grid(row=9, column=3)
+    buttonRaster.grid(row=12, column=3)
     #entryRaster.insert(END, "Z:\MALAM357\GMT-3051 Projet en génie géomatique II\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2_30.tif")
     entryRaster.insert(END, "Z:\GMT3051\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2_30.tif")
 
     # Ajout d'une entrée et d'un bouton pour entrer une taille de pixel.
     labelPixel = Label(frame, text="Pixel Size:")
-    labelPixel.grid(row=10, column=0)
+    labelPixel.grid(row=13, column=0)
     entryPixel = Entry(frame)
-    entryPixel.grid(row=10, column=1, columnspan=2)
+    entryPixel.grid(row=13, column=1, columnspan=2)
     entryPixel.insert(END, "30")
 
     # Ajout de deux boutons pour poursuivre et pour quitter.
     buttonOK = Button(frame, text="OK", command=getValues)
-    buttonOK.grid(row=11, column=1)
+    buttonOK.grid(row=14, column=1)
     buttonQuit = Button(frame, text="Quit", command=sys.exit)
-    buttonQuit.grid(row=11, column=2)
+    buttonQuit.grid(row=14, column=2)
 
     mainWindow.update()
     canvas.config(scrollregion=canvas.bbox(ALL))
