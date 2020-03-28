@@ -309,43 +309,70 @@ def rasteriseVector(inPathVector, inPathRaster, outPath, champs, valeur):
 
     del out
 
+def convertToRGB(pathImage):
+    fileName = os.path.basename(pathImage)
+    image = gdal.Open(pathImage, gdal.GA_ReadOnly)
+    imageBande1 = image.GetRasterBand(1).ReadAsArray()
+    pathImage2 = pathImage[:-5] + "_RGB.tiff"
+
+    image_RGB = gdal.GetDriverByName("GTiff").Create(pathImage2,
+                                                       image.RasterXSize, image.RasterYSize, 3)
+    image_RGB.GetRasterBand(1).WriteArray(imageBande1)
+    image_RGB.GetRasterBand(2).WriteArray(imageBande1)
+    image_RGB.GetRasterBand(3).WriteArray(imageBande1)
+
+    rasterImage1B1 = image_RGB.GetRasterBand(1).ReadAsArray()
+    rasterImage1B2 = image_RGB.GetRasterBand(2).ReadAsArray()
+    rasterImage1B3 = image_RGB.GetRasterBand(3).ReadAsArray()
+
+    for i in range(image.RasterYSize):
+        for j in range(image.RasterXSize):
+            if imageBande1[i, j] == 0:
+                rasterImage1B1[i, j] = 255
+                rasterImage1B2[i, j] = 255
+                rasterImage1B3[i, j] = 255
+
+            elif imageBande1[i, j] == 1:
+                rasterImage1B1[i, j] = 0
+                rasterImage1B2[i, j] = 0
+                rasterImage1B3[i, j] = 0
+
+    image_RGB.GetRasterBand(1).WriteArray(rasterImage1B1)
+    image_RGB.GetRasterBand(2).WriteArray(rasterImage1B2)
+    image_RGB.GetRasterBand(3).WriteArray(rasterImage1B3)
+
+    image_RGB.SetProjection(image.GetProjection())
+    image_RGB.SetGeoTransform(image.GetGeoTransform())
+    image_RGB.FlushCache()
+
+    del image_RGB
+
 def rasterClassification(inPathImage1, inPathImage2, outPath):
     if not os.path.exists(outPath):
         fileName = os.path.basename(outPath)
-        print("Classifying raster " + fileName + "...")
-
 
         rasterImage1 = gdal.Open(inPathImage1, gdal.GA_ReadOnly)
         rasterImage2 = gdal.Open(inPathImage2, gdal.GA_ReadOnly)
 
-        if rasterImage1.RasterCount == 1:
-            rasterImage1B1 = rasterImage1.GetRasterBand(1).ReadAsArray()
+        rasterImage1B1 = rasterImage1.GetRasterBand(1).ReadAsArray()
+        rasterImage1B2 = rasterImage1.GetRasterBand(2).ReadAsArray()
+        rasterImage1B3 = rasterImage1.GetRasterBand(3).ReadAsArray()
 
-        elif rasterImage1.RasterCount == 3:
-            rasterImage1 = gdal.Open(inPathImage1, gdal.GA_ReadOnly)
-            rasterImage1B1 = rasterImage1.GetRasterBand(1).ReadAsArray()
-            rasterImage1B2 = rasterImage1.GetRasterBand(2).ReadAsArray()
-            rasterImage1B3 = rasterImage1.GetRasterBand(3).ReadAsArray()
-        else:
-            print("Nombre de bandes invalide")
+        rasterImage2B1 = rasterImage1.GetRasterBand(1).ReadAsArray()
+        rasterImage2B2 = rasterImage1.GetRasterBand(2).ReadAsArray()
+        rasterImage2B3 = rasterImage1.GetRasterBand(3).ReadAsArray()
 
-        if rasterImage2.RasterCount == 1:
-            rasterImage2B1 = rasterImage1.GetRasterBand(1).ReadAsArray()
-
-        elif rasterImage2.RasterCount == 3:
-            rasterImage2 = gdal.Open(inPathImage2, gdal.GA_ReadOnly)
-            rasterImage2B1 = rasterImage1.GetRasterBand(1).ReadAsArray()
-            rasterImage2B2 = rasterImage1.GetRasterBand(2).ReadAsArray()
-            rasterImage2B3 = rasterImage1.GetRasterBand(3).ReadAsArray()
-        else:
-            print("Nombre de bandes invalide")
-
-        for i in range(rasterImage2.RasterYSize):
-            for j in range(rasterImage2.RasterXSize):
-                if rasterImage2B1[i, j] == 1:  # Zone humide
-                    rasterImage1B1[i, j] = 255
-                    rasterImage1B2[i, j] = 0  # Rouge
+        for i in range(rasterImage1.RasterYSize):
+            for j in range(rasterImage1.RasterXSize):
+                if rasterImage1B1[i, j] != 255 and rasterImage1B2[i, j] != 255 and rasterImage1B3[i, j] != 255:
+                    rasterImage1B1[i, j] = 0
+                    rasterImage1B2[i, j] = 255
                     rasterImage1B3[i, j] = 0
+
+                else:
+                    rasterImage1B1[i, j] = rasterImage2B1[i, j]
+                    rasterImage1B2[i, j] = rasterImage2B2[i, j]
+                    rasterImage1B3[i, j] = rasterImage2B3[i, j]
 
         rasterClass = gdal.GetDriverByName("GTiff").Create(outPath,
                                                            rasterImage1.RasterXSize, rasterImage1.RasterYSize, 3)
