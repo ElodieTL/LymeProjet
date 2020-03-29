@@ -35,6 +35,7 @@ import pandas as pd
 def extractEPSGVector(vectorData):
     # Extraire le code EPSG (la projection) du fichier vectoriel.
     srs = vectorData.crs
+
     vectorDataCRS = re.search("epsg:(.*)", str(srs))
 
     # Si une projection existe, extraire le code numérique et un String pour d'autres fonctions.

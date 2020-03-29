@@ -101,36 +101,35 @@ def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaste
                 data = gpd.read_file(outPath)
                 dataCRS, dataCRSStr = extractEPSGVector(data)
 
-            if dataCRS is not None:
-                # Si la projection n'est pas la même que celle de la région d'intérêt et qu'un fichier reprojeté n'existe pas.
-                if dataCRS != ROICRS:
-                    if type == "Raster":
-                        if not os.path.exists(outPathReproject):
-                            reprojectRaster(outPath, outPathReproject, ROICRSStr)
+            # Si la projection n'est pas la même que celle de la région d'intérêt et qu'un fichier reprojeté n'existe pas.
+            if dataCRS != ROICRS:
+                if type == "Raster":
+                    if not os.path.exists(outPathReproject):
+                        reprojectRaster(outPath, outPathReproject, ROICRSStr)
 
-                        # Si un raster découpé n'existe pas.
-                        if not os.path.exists(outPathClip):
-                            clipRaster(outPathReproject, outPathClip, ROIDataJson, ROICRS)
+                    # Si un raster découpé n'existe pas.
+                    if not os.path.exists(outPathClip):
+                        clipRaster(outPathReproject, outPathClip, ROIDataJson, ROICRS)
 
-                        # Si un raster rééchantillonné n'existe pas.
-                        if not os.path.exists(outPathResample):
-                            resampleRaster(outPathClip, ROIPathRaster, outPathResample)
+                    # Si un raster rééchantillonné n'existe pas.
+                    if not os.path.exists(outPathResample):
+                        resampleRaster(outPathClip, ROIPathRaster, outPathResample)
 
-                    else:
-                        if not os.path.exists(outPathReproject):
-                            reprojectVector(data, outPathReproject, ROICRSStr)
+                else:
+                    if not os.path.exists(outPathReproject):
+                        reprojectVector(data, outPathReproject, ROICRSStr)
 
-                        clip = False
-                        if not os.path.exists(outPathClip):
-                            clip = clipVector(outPathReproject, outPathClip, ROIDataVector)
+                    clip = False
+                    if not os.path.exists(outPathClip):
+                        clip = clipVector(outPathReproject, outPathClip, ROIDataVector)
 
-                            #if clip == False:
-                                #os.remove(outPath, outPathReproject)     à tester, les supprimer pour pas les traiter à chaque fois
+                        #if clip == False:
+                            #os.remove(outPath, outPathReproject)     à tester, les supprimer pour pas les traiter à chaque fois
 
 
-                        # Si le fichier vectoriel n'est pas rasterisé.
-                        if not os.path.exists(outPathRaster) and (clip or os.path.exists(outPathClip)):
-                            rasteriseVector(outPathClip, ROIPathRaster, outPathRaster, champs, valeur)
+                    # Si le fichier vectoriel n'est pas rasterisé.
+                    if not os.path.exists(outPathRaster) and (clip or os.path.exists(outPathClip)):
+                        rasteriseVector(outPathClip, ROIPathRaster, outPathRaster, champs, valeur)
 
             else:
                 print("No projection detected for raster " + outPath + ". Impossible to proceed.")
