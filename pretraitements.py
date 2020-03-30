@@ -62,11 +62,10 @@ def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaste
         # Nom de bases des fichiers de sortie
         nom = url[4]
 
-        # Spécifier le chemin du fichier qui sera téléchargé.
+        # Spécifier le nom et le chemin du fichier qui sera téléchargé.
         outPath = os.path.join(detDir, nom)
         extension = os.path.basename(url[0])[-4:]
         outPath = outPath + extension
-        #outPath = os.path.join(detDir, os.path.basename(url[0]))
 
         # Vérifier si la donnée téléchargée est compressée.
         if os.path.basename(url[0])[-4:] in [".zip", ".rar"]:
@@ -122,10 +121,6 @@ def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaste
                     clip = False
                     if not os.path.exists(outPathClip):
                         clip = clipVector(outPathReproject, outPathClip, ROIDataVector)
-
-                        #if clip == False:
-                            #os.remove(outPath, outPathReproject)     à tester, les supprimer pour pas les traiter à chaque fois
-
 
                     # Si le fichier vectoriel n'est pas rasterisé.
                     if not os.path.exists(outPathRaster) and (clip or os.path.exists(outPathClip)):

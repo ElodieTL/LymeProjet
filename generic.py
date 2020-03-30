@@ -234,6 +234,11 @@ def clipVector(inPath, outPath, clipPoly):
             print("No data after clipping.")
             clip = False
 
+            # Supprimer les fichiers afin de ne pas refaire les traitements dans le futur.
+            print("Deleting relevant files")
+            for file in glob.glob(inPath.replace("_reproject.shp", "*")):
+                os.remove(file)
+
             return clip
 
 
@@ -266,10 +271,8 @@ def resampleRaster(inPath, inPathRef, outPath):
     ref = gdal.Open(inPathRef, gdal.GA_ReadOnly)
     refProj = ref.GetProjection()
     refTrans = ref.GetGeoTransform()
-    pixelWidth = ref.RasterXSize
-    pixelHeight = ref.RasterYSize
 
-    out = gdal.GetDriverByName("GTiff").Create(outPath, pixelWidth, pixelHeight, 1, gdal.GDT_Float32)
+    out = gdal.GetDriverByName("GTiff").Create(outPath, ref.RasterXSize, ref.RasterYSize, 1, gdal.GDT_Byte)
     out.SetGeoTransform(refTrans)
     out.SetProjection(refProj)
 
@@ -293,22 +296,22 @@ def rasteriseVector(inPathVector, inPathRaster, outPath, champs, valeur):
     vectorData = ogr.Open(inPathVector)
     vectorLayer = vectorData.GetLayer()
 
-    out = gdal.GetDriverByName("GTiff").Create(outPath, rasterRef.RasterXSize, rasterRef.RasterYSize, 1, gdal.GDT_Byte, options=["COMPRESS=DEFLATE"])
+    out = gdal.GetDriverByName("GTiff").Create(outPath, rasterRef.RasterXSize, rasterRef.RasterYSize, 1, gdal.GDT_Byte)
     out.SetProjection(rasterRef.GetProjectionRef())
     out.SetGeoTransform(rasterRef.GetGeoTransform())
 
-   # if not math.isnan(valeur):
-    if not valeur == None:
+    if not math.isnan(valeur):
+    # if not valeur == None: # Ne fonctionne pas de mon côté
         SQL = champs + "='" + valeur + "'"
         vectorLayer.SetAttributeFilter(SQL)
 
-    else:
-        band = out.GetRasterBand(1)
-        band.SetNoDataValue(-9999)
+    band = out.GetRasterBand(1)
+    band.Fill(-9999)
+    band.SetNoDataValue(-9999)
+    band.FlushCache()
 
-    gdal.RasterizeLayer(out, [1], vectorLayer, burn_values=[1])
+    gdal.RasterizeLayer(out, [1], vectorLayer, None, None, [1])
 
-    del out
 
 def convertToRGB(pathImage):
     fileName = os.path.basename(pathImage)

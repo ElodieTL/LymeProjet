@@ -186,7 +186,7 @@ if __name__ == "__main__":
     listZonesHumides.grid(row=3, column=2, columnspan=2)
     listZonesHumides.insert(END, "Canards illimités")
 
-    # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Forêt.
+    # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Eau.
     labelEau = Label(frame, text="Eau")
     labelEau.grid(row=4, column=0)
     varEau = IntVar()
@@ -196,7 +196,7 @@ if __name__ == "__main__":
     listEau.grid(row=4, column=2, columnspan=2)
     listEau.insert(END, "CanVec")
 
-    # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Eau.
+    # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Parcs.
     labelParcs = Label(frame, text="Parcs")
     labelParcs.grid(row=5, column=0)
     varParcs = IntVar()
@@ -253,7 +253,6 @@ if __name__ == "__main__":
     entryDir.grid(row=10, column=1, columnspan=2)
     buttonDir = Button(frame, text="...", command=getDir)
     buttonDir.grid(row=10, column=3)
-    #entryDir.insert(END, "D:\Donnees")
     entryDir.insert(END, "Z:\GMT3051\Donnees")
 
     # Ajout d'une entrée et d'un bouton pour entrer le chemin vers le fichier vectoriel de référence.
@@ -263,7 +262,6 @@ if __name__ == "__main__":
     entryVec.grid(row=11, column=1, columnspan=2)
     buttonVec = Button(frame, text="...", command=getFileVector)
     buttonVec.grid(row=11, column=3)
-    #entryVec.insert(END, "Z:\MALAM357\GMT-3051 Projet en génie géomatique II\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp")
     entryVec.insert(END, "Z:\GMT3051\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp")
 
     # Ajout d'une entrée et d'un bouton pour entrer le chemin vers le fichier raster de référence.
@@ -273,7 +271,6 @@ if __name__ == "__main__":
     entryRaster.grid(row=12, column=1, columnspan=2)
     buttonRaster = Button(frame, text="...", command=getFileRaster)
     buttonRaster.grid(row=12, column=3)
-    #entryRaster.insert(END, "Z:\MALAM357\GMT-3051 Projet en génie géomatique II\LymeProjet\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2_30.tif")
     entryRaster.insert(END, "Z:\GMT3051\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2_30.tif")
 
     # Ajout d'une entrée et d'un bouton pour entrer une taille de pixel.
