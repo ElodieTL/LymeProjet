@@ -116,6 +116,7 @@ def main(dataDir, ROIPathVector, ROIPathRaster, detList, sourcesList, pixelSize)
     ROICRS, ROICRSStr = extractEPSGVector(ROIDataVector)
 
     # Si le code EPSG de la donnée vectielle de référence est connu, on poursuit. Sinon, on ne peut poursuivre.
+    listPath = []
     if ROICRS is not None:
         # Pour chaque déterminant de la liste de déterminants devant être traités.
         for det in range(len(detList)):
@@ -125,15 +126,18 @@ def main(dataDir, ROIPathVector, ROIPathRaster, detList, sourcesList, pixelSize)
                 sources = sourcesList[det]
 
                 # On lance les prétraitements pour le déterminant et les sources courants.
-                pretraitements(dataDir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector, ROIDataVectorJson)
-
+                listetemp = pretraitements(dataDir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector, ROIDataVectorJson)
+                for elem in listetemp:
+                    listPath.append(elem)
     else:
         print("No projection detected for ROI. Impossible to proceed.")
 
+    for image in range(len(listPath)-1):
+        rasterClassification(listPath[image-1], [image],  r"Z:\GMT3051\Donnees\Eau\canvec_250K_QC_Hydro\clas.tiff")
 
 if __name__ == "__main__":
     # Initialisation de la fenêtre principale incluant le titre et la taille.
-    mainWindow = Tk()
+    mainWindo w = Tk()
     mainWindow.title("Fusion et classification de déterminants environnementaux")
     mainWindow.geometry("260x500")
 
@@ -166,15 +170,25 @@ if __name__ == "__main__":
     labelSources = Label(frame, text="Source(s)")
     labelSources.grid(row=1, column=2, columnspan=2)
 
+    # Ajout d'une légende pour les priorités.
+    labelPriorite = Label(frame, text="Priorité(s)")
+    labelPriorite.grid(row=1, column=5)
+
+    listHeight = 3
+
     # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Forêt.
     labelForet = Label(frame, text="Forêt")
     labelForet.grid(row=2, column=0)
     varForet = IntVar()
     checkForet = Checkbutton(frame, variable=varForet)
     checkForet.grid(row=2, column=1)
-    listForet = Listbox(frame, selectmode=MULTIPLE, exportselection=0)
+    listForet = Listbox(frame, selectmode=MULTIPLE, height=listHeight, exportselection=0)
     listForet.grid(row=2, column=2, columnspan=2)
     listForet.insert(END, "RN Canada")
+    content = StringVar()
+    prioriteForet = Entry(frame, textvariable=content)
+    prioriteForet.config(width=2)
+    prioriteForet.grid(row=2, column=5)
 
     # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Zones humides.
     labelZonesHumides = Label(frame, text="Zones humides")
@@ -182,9 +196,13 @@ if __name__ == "__main__":
     varZonesHumides = IntVar()
     checkZonesHumides = Checkbutton(frame, variable=varZonesHumides)
     checkZonesHumides.grid(row=3, column=1)
-    listZonesHumides = Listbox(frame, selectmode=MULTIPLE, exportselection=0)
+    listZonesHumides = Listbox(frame, selectmode=MULTIPLE,height=listHeight, exportselection=0)
     listZonesHumides.grid(row=3, column=2, columnspan=2)
     listZonesHumides.insert(END, "Canards illimités")
+    content = StringVar()
+    prioriteZoneHumide = Entry(frame, textvariable=content)
+    prioriteZoneHumide.config(width=2)
+    prioriteZoneHumide.grid(row=3, column=5)
 
     # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Eau.
     labelEau = Label(frame, text="Eau")
@@ -192,9 +210,13 @@ if __name__ == "__main__":
     varEau = IntVar()
     checkEau = Checkbutton(frame, variable=varEau)
     checkEau.grid(row=4, column=1)
-    listEau = Listbox(frame, selectmode=MULTIPLE, exportselection=0)
+    listEau = Listbox(frame, selectmode=MULTIPLE,height=listHeight, exportselection=0)
     listEau.grid(row=4, column=2, columnspan=2)
     listEau.insert(END, "CanVec")
+    content = StringVar()
+    prioriteEau = Entry(frame, textvariable=content)
+    prioriteEau.config(width=2)
+    prioriteEau.grid(row=4, column=5)
 
     # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Parcs.
     labelParcs = Label(frame, text="Parcs")
@@ -202,9 +224,13 @@ if __name__ == "__main__":
     varParcs = IntVar()
     checkParcs = Checkbutton(frame, variable=varParcs)
     checkParcs.grid(row=5, column=1)
-    listParcs = Listbox(frame, selectmode=MULTIPLE, exportselection=0)
+    listParcs = Listbox(frame, selectmode=MULTIPLE,height=listHeight, exportselection=0)
     listParcs.grid(row=5, column=2, columnspan=2)
     listParcs.insert(END, "MERN")
+    content = StringVar()
+    prioriteParcs = Entry(frame, textvariable=content)
+    prioriteParcs.config(width=2)
+    prioriteParcs.grid(row=4, column=5)
 
     # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Zones agricoles.
     labelZonesAgricoles = Label(frame, text="Zones agricoles")
@@ -212,9 +238,13 @@ if __name__ == "__main__":
     varZonesAgricoles = IntVar()
     checkZonesAgricoles = Checkbutton(frame, variable=varZonesAgricoles)
     checkZonesAgricoles.grid(row=6, column=1)
-    listZonesAgricoles = Listbox(frame, selectmode=MULTIPLE, exportselection=0)
+    listZonesAgricoles = Listbox(frame, selectmode=MULTIPLE, height=listHeight, exportselection=0)
     listZonesAgricoles.grid(row=6, column=2, columnspan=2)
     listZonesAgricoles.insert(END, "CPTAQ")
+    content = StringVar()
+    prioriteZonesAgricoles = Entry(frame, textvariable=content)
+    prioriteZonesAgricoles.config(width=2)
+    prioriteZonesAgricoles.grid(row=5, column=5)
 
     # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Voies de communication.
     labelVoiesCommunication = Label(frame, text="Voies de communication")
@@ -222,9 +252,13 @@ if __name__ == "__main__":
     varVoiesCommunication = IntVar()
     checkVoiesCommunication = Checkbutton(frame, variable=varVoiesCommunication)
     checkVoiesCommunication.grid(row=7, column=1)
-    listVoiesCommunication = Listbox(frame, selectmode=MULTIPLE, exportselection=0)
+    listVoiesCommunication = Listbox(frame, selectmode=MULTIPLE, height=listHeight, exportselection=0)
     listVoiesCommunication.grid(row=7, column=2, columnspan=2)
     listVoiesCommunication.insert(END, "CanVec")
+    content = StringVar()
+    prioriteVoiesCommunication = Entry(frame, textvariable=content)
+    prioriteVoiesCommunication.config(width=2)
+    prioriteVoiesCommunication.grid(row=6, column=5)
 
     # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Zones Anthropisées.
     labelZonesAnthropisées = Label(frame, text="Zones Anthropisées")
@@ -232,9 +266,13 @@ if __name__ == "__main__":
     varZonesAnthropisées = IntVar()
     checkZonesAnthropisées = Checkbutton(frame, variable=varZonesAnthropisées)
     checkZonesAnthropisées.grid(row=8, column=1)
-    listZonesAnthropisées = Listbox(frame, selectmode=MULTIPLE, exportselection=0)
+    listZonesAnthropisées = Listbox(frame, selectmode=MULTIPLE, height=listHeight, exportselection=0)
     listZonesAnthropisées.grid(row=8, column=2, columnspan=2)
     listZonesAnthropisées.insert(END, "CanVec")
+    content = StringVar()
+    prioriteZonesAnthropisées = Entry(frame, textvariable=content)
+    prioriteZonesAnthropisées.config(width=2)
+    prioriteZonesAnthropisées.grid(row=7, column=5)
 
     # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Couverture du Sol.
     labelCouvertureSol = Label(frame, text="Couverture du Sol")
@@ -242,9 +280,13 @@ if __name__ == "__main__":
     varCouvertureSol = IntVar()
     checkCouvertureSol = Checkbutton(frame, variable=varCouvertureSol)
     checkCouvertureSol.grid(row=9, column=1)
-    listCouvertureSol = Listbox(frame, selectmode=MULTIPLE, exportselection=0)
+    listCouvertureSol = Listbox(frame, selectmode=MULTIPLE, height=listHeight, exportselection=0)
     listCouvertureSol.grid(row=9, column=2, columnspan=2)
     #listCouvertureSol.insert(END, "CanVec")
+    content = StringVar()
+    prioriteCouvertureSol = Entry(frame, textvariable=content)
+    prioriteCouvertureSol.config(width=2)
+    prioriteCouvertureSol.grid(row=8, column=5)
 
     # Ajout d'une entrée et d'un bouton pour entrer le chemin vers le répertoire où seront enregistré les données.
     labelDir = Label(frame, text="Data Directory:")

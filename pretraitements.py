@@ -12,9 +12,10 @@ from generic import *
 # ROIDataJson: Objet de type JSON représentant la géométrie du fichier vectoriel de référence au format JSON.
 def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector, ROIDataJson):
     # Codification du déterminant courant en String.
+    checkF = False
     if det == 0:
         det = "Foret"
-
+        checkF = True
     elif det == 1:
         det = "Zones humides"
 
@@ -50,6 +51,8 @@ def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaste
     # Création du répertoire où sera contenu les données selon le déterminant courant, s'il n'existe pas.
     createDir(detDir)
 
+    listeForet = []
+    listePath = []
     # Pour chaque lien de la liste de liens.
     for url in urlList:
         # Type courant (Raster ou Vecteur).
@@ -114,6 +117,11 @@ def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaste
                     if not os.path.exists(outPathResample):
                         resampleRaster(outPathClip, ROIPathRaster, outPathResample)
 
+                    if "Foret" in outPathResample:
+                        listeForet.append(outPathResample)
+                    else:
+                        listePath.append(outPathResample)
+                        print("CALISSS WHY ")
                 else:
                     if not os.path.exists(outPathReproject):
                         reprojectVector(data, outPathReproject, ROICRSStr)
@@ -125,6 +133,13 @@ def pretraitements(dir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaste
                     # Si le fichier vectoriel n'est pas rasterisé.
                     if not os.path.exists(outPathRaster) and (clip or os.path.exists(outPathClip)):
                         rasteriseVector(outPathClip, ROIPathRaster, outPathRaster, champs, valeur)
+                    listePath.append(outPathRaster)
 
             else:
                 print("No projection detected for raster " + outPath + ". Impossible to proceed.")
+        if checkF:
+            outPathForet = foret(listeForet[0], listeForet[1], listeForet[2], dir)
+            listePath.append(outPathForet)
+            checkF = False
+
+    return listePath
