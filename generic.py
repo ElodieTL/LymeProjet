@@ -303,8 +303,7 @@ def rasteriseVector(inPathVector, inPathRaster, outPath, champs, valeur):
     out.SetProjection(rasterRef.GetProjectionRef())
     out.SetGeoTransform(rasterRef.GetGeoTransform())
 
-    if not math.isnan(valeur):
-    # if not valeur == None: # Ne fonctionne pas de mon côté
+    if type(valeur) == str:
         SQL = champs + "='" + valeur + "'"
         vectorLayer.SetAttributeFilter(SQL)
 

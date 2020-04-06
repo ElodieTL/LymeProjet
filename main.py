@@ -137,7 +137,7 @@ def main(dataDir, ROIPathVector, ROIPathRaster, detList, sourcesList, pixelSize)
 
 if __name__ == "__main__":
     # Initialisation de la fenêtre principale incluant le titre et la taille.
-    mainWindo w = Tk()
+    mainWindow = Tk()
     mainWindow.title("Fusion et classification de déterminants environnementaux")
     mainWindow.geometry("260x500")
 
