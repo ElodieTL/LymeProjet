@@ -18,6 +18,18 @@ def getValues():
     detsList.append(varZonesAnthropisées.get())
     detsList.append(varCouvertureSol.get())
 
+    # Créer une liste vide de la priorité des déterminants qui seront traitées.
+    detPriorite = []
+
+    detPriorite.append(prioriteForet.get())
+    detPriorite.append(prioriteZonesHumides.get())
+    detPriorite.append(prioriteEau.get())
+    detPriorite.append(prioriteParcs.get())
+    detPriorite.append(prioriteZonesAgricoles.get())
+    detPriorite.append(prioriteVoiesCommunication.get())
+    detPriorite.append(prioriteZonesAnthropisées.get())
+    detPriorite.append(prioriteCouvertureSol.get())
+
     # Créer une liste vide des sources qui seront traitées.
     sourcesListMaster = []
 
@@ -58,6 +70,7 @@ def getValues():
 
         sourcesListMaster.append(sourcesListDet)
 
+    print("priorite:", detPriorite)
     # Récupérer le répertoire choisi par l'utilisateur.
     dataDir = entryDir.get()
 
@@ -74,7 +87,7 @@ def getValues():
     mainWindow.destroy()
 
     # Appeler la fonction principale.
-    main(dataDir, vectorBase, rasterBase, detsList, sourcesListMaster, pixelSize)
+    main(dataDir, vectorBase, rasterBase, detsList, detPriorite, sourcesListMaster, pixelSize)
 
 
 """ Fonction permettant de récupérer le chemin du répertoire où seront enregistrées les données. """
@@ -103,9 +116,10 @@ def getFileRaster():
 # ROIPathVector: String représentant le chemin du fichier vectoriel de référence.
 # ROIPathRaster: String représentant le chemin du fichier raster de référence.
 # detList: Liste contenant les déterminants devant être traités.
+# detPriorite: Liste contenant l'ordre de priorité des déterminants
 # sourcesList: Liste contenant les sources de données devant être traitées.
 # pixelSize: String représentant la taille d'un pixel (utilisé pour les noms de fichiers).
-def main(dataDir, ROIPathVector, ROIPathRaster, detList, sourcesList, pixelSize):
+def main(dataDir, ROIPathVector, ROIPathRaster, detList, detPriorite, sourcesList, pixelSize):
     # Lecture des données du fichier vectoriel de référence.
     ROIDataVector = gpd.read_file(ROIPathVector)
 
@@ -116,7 +130,7 @@ def main(dataDir, ROIPathVector, ROIPathRaster, detList, sourcesList, pixelSize)
     ROICRS, ROICRSStr = extractEPSGVector(ROIDataVector)
 
     # Si le code EPSG de la donnée vectielle de référence est connu, on poursuit. Sinon, on ne peut poursuivre.
-    listPath = []
+    listPath = [] # liste de tous les rasters devant être utilisés pour le traitement
     if ROICRS is not None:
         # Pour chaque déterminant de la liste de déterminants devant être traités.
         for det in range(len(detList)):
@@ -125,15 +139,16 @@ def main(dataDir, ROIPathVector, ROIPathRaster, detList, sourcesList, pixelSize)
                 # On récupère la liste de sources correspondantes.
                 sources = sourcesList[det]
 
-                # On lance les prétraitements pour le déterminant et les sources courants.
+                # On lance les prétraitements pour le déterminant et les sources courants. Obtient une liste des rasters pertinents.
                 listetemp = pretraitements(dataDir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector, ROIDataVectorJson)
                 for elem in listetemp:
-                    listPath.append(elem)
+                    listPath.append([det, elem])
+
     else:
         print("No projection detected for ROI. Impossible to proceed.")
 
-    for image in range(len(listPath)-1):
-        rasterClassification(listPath[image-1], [image],  r"Z:\GMT3051\Donnees\Eau\canvec_250K_QC_Hydro\clas.tiff")
+    #for image in range(len(listPath)-1):
+        #rasterClassification(listPath[image-1], [image],  r"Z:\GMT3051\Donnees\Eau\canvec_250K_QC_Hydro\clas.tiff")
 
 if __name__ == "__main__":
     # Initialisation de la fenêtre principale incluant le titre et la taille.
@@ -200,9 +215,9 @@ if __name__ == "__main__":
     listZonesHumides.grid(row=3, column=2, columnspan=2)
     listZonesHumides.insert(END, "Canards illimités")
     content = StringVar()
-    prioriteZoneHumide = Entry(frame, textvariable=content)
-    prioriteZoneHumide.config(width=2)
-    prioriteZoneHumide.grid(row=3, column=5)
+    prioriteZonesHumides = Entry(frame, textvariable=content)
+    prioriteZonesHumides.config(width=2)
+    prioriteZonesHumides.grid(row=3, column=5)
 
     # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Eau.
     labelEau = Label(frame, text="Eau")
@@ -230,7 +245,7 @@ if __name__ == "__main__":
     content = StringVar()
     prioriteParcs = Entry(frame, textvariable=content)
     prioriteParcs.config(width=2)
-    prioriteParcs.grid(row=4, column=5)
+    prioriteParcs.grid(row=5, column=5)
 
     # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Zones agricoles.
     labelZonesAgricoles = Label(frame, text="Zones agricoles")
@@ -244,7 +259,7 @@ if __name__ == "__main__":
     content = StringVar()
     prioriteZonesAgricoles = Entry(frame, textvariable=content)
     prioriteZonesAgricoles.config(width=2)
-    prioriteZonesAgricoles.grid(row=5, column=5)
+    prioriteZonesAgricoles.grid(row=6, column=5)
 
     # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Voies de communication.
     labelVoiesCommunication = Label(frame, text="Voies de communication")
@@ -258,7 +273,7 @@ if __name__ == "__main__":
     content = StringVar()
     prioriteVoiesCommunication = Entry(frame, textvariable=content)
     prioriteVoiesCommunication.config(width=2)
-    prioriteVoiesCommunication.grid(row=6, column=5)
+    prioriteVoiesCommunication.grid(row=7, column=5)
 
     # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Zones Anthropisées.
     labelZonesAnthropisées = Label(frame, text="Zones Anthropisées")
@@ -272,7 +287,7 @@ if __name__ == "__main__":
     content = StringVar()
     prioriteZonesAnthropisées = Entry(frame, textvariable=content)
     prioriteZonesAnthropisées.config(width=2)
-    prioriteZonesAnthropisées.grid(row=7, column=5)
+    prioriteZonesAnthropisées.grid(row=8, column=5)
 
     # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Couverture du Sol.
     labelCouvertureSol = Label(frame, text="Couverture du Sol")
@@ -286,7 +301,7 @@ if __name__ == "__main__":
     content = StringVar()
     prioriteCouvertureSol = Entry(frame, textvariable=content)
     prioriteCouvertureSol.config(width=2)
-    prioriteCouvertureSol.grid(row=8, column=5)
+    prioriteCouvertureSol.grid(row=9, column=5)
 
     # Ajout d'une entrée et d'un bouton pour entrer le chemin vers le répertoire où seront enregistré les données.
     labelDir = Label(frame, text="Data Directory:")
