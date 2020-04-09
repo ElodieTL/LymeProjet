@@ -321,6 +321,7 @@ def convertToRGB(pathImage):
     imageBande1 = image.GetRasterBand(1).ReadAsArray()
     pathImage2 = pathImage[:-5] + "_RGB.tiff"
 
+
     image_RGB = gdal.GetDriverByName("GTiff").Create(pathImage2,
                                                        image.RasterXSize, image.RasterYSize, 3)
     image_RGB.GetRasterBand(1).WriteArray(imageBande1)
@@ -351,9 +352,71 @@ def convertToRGB(pathImage):
     image_RGB.SetGeoTransform(image.GetGeoTransform())
     image_RGB.FlushCache()
 
-    del image_RGB
+    return image_RGB
+
 
 def rasterClassification(inPathImage1, inPathImage2, outPath):
+    if not os.path.exists(outPath):
+        print("YOUHOU")
+        fileName = os.path.basename(outPath)
+
+        rasterImage1 = gdal.Open(inPathImage1, gdal.GA_ReadOnly)
+        rasterImage2 = gdal.Open(inPathImage2, gdal.GA_ReadOnly)
+
+        rasterImage1B1 = rasterImage1.GetRasterBand(1).ReadAsArray()
+
+        rasterImage2B1 = rasterImage2.GetRasterBand(1).ReadAsArray()
+
+
+        for i in range(rasterImage1.RasterYSize):
+            for j in range(rasterImage1.RasterXSize):
+                if rasterImage1B1[i, j] == 1:
+                    rasterImage1B1[i, j] = 1
+
+                else:
+                    rasterImage1B1[i, j] = rasterImage2B1[i, j]
+
+
+        rasterClass = gdal.GetDriverByName("GTiff").Create(outPath,
+                                                           rasterImage1.RasterXSize, rasterImage1.RasterYSize, 1)
+        rasterClass.GetRasterBand(1).WriteArray(rasterImage1B1)
+
+        rasterClass.SetProjection(rasterImage1.GetProjection())
+        rasterClass.SetGeoTransform(rasterImage1.GetGeoTransform())
+        rasterClass.FlushCache()
+        return rasterImage1B1[i, j]
+
+def rasterClassificationTotal(inPathImage1, inPathImage2, outPath, classe):
+    if not os.path.exists(outPath):
+        fileName = os.path.basename(outPath)
+
+        rasterImage1 = gdal.Open(inPathImage1, gdal.GA_ReadOnly)
+        rasterImage2 = gdal.Open(inPathImage2, gdal.GA_ReadOnly)
+
+        rasterImage1B1 = rasterImage1.GetRasterBand(1).ReadAsArray()
+
+        rasterImage2B1 = rasterImage2.GetRasterBand(1).ReadAsArray()
+
+
+        for i in range(rasterImage1.RasterYSize):
+            for j in range(rasterImage1.RasterXSize):
+                if rasterImage2B1[i, j] == 1:
+                    rasterImage1B1[i, j] = classe+2
+
+                else:
+                    rasterImage1B1[i, j] = rasterImage1B1[i, j]
+
+
+        rasterClass = gdal.GetDriverByName("GTiff").Create(outPath,
+                                                           rasterImage1.RasterXSize, rasterImage1.RasterYSize, 1)
+        rasterClass.GetRasterBand(1).WriteArray(rasterImage1B1)
+
+        rasterClass.SetProjection(rasterImage1.GetProjection())
+        rasterClass.SetGeoTransform(rasterImage1.GetGeoTransform())
+        rasterClass.FlushCache()
+        return rasterImage1B1[i, j]
+
+"""def rasterClassification(inPathImage1, inPathImage2, outPath):
     if not os.path.exists(outPath):
         fileName = os.path.basename(outPath)
 
@@ -380,6 +443,7 @@ def rasterClassification(inPathImage1, inPathImage2, outPath):
                     rasterImage1B2[i, j] = rasterImage2B2[i, j]
                     rasterImage1B3[i, j] = rasterImage2B3[i, j]
 
+        
         rasterClass = gdal.GetDriverByName("GTiff").Create(outPath,
                                                            rasterImage1.RasterXSize, rasterImage1.RasterYSize, 3)
         rasterClass.GetRasterBand(1).WriteArray(rasterImage1B1)
@@ -388,7 +452,7 @@ def rasterClassification(inPathImage1, inPathImage2, outPath):
 
         rasterClass.SetProjection(rasterImage1.GetProjection())
         rasterClass.SetGeoTransform(rasterImage1.GetGeoTransform())
-        rasterClass.FlushCache()
+        rasterClass.FlushCache()"""
 
 def foret(feuillus, conifere, inconnu, dir):
     pathFeuillus = os.path.join(feuillus)
