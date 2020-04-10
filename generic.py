@@ -223,6 +223,10 @@ def clipVector(inPath, outPath, clipPoly):
         # Appliquer un buffer nul (pour gérer les géométries invalides, au besoin).
         dataVector["geometry"] = dataVector.apply(lambda row: row.geometry.buffer(0) if row.geometry.geom_type == "Polygon" else row.geometry, axis=1)
 
+        # Déterminer si la couche comporte que des éléments de type point
+        #filterPoint = False
+        #dataVector["geometry"] = dataVector.apply(next(filter(lambda row: row.geometry.geom_type == "Point", filterPoint)))
+
         # Découper le fichier vectoriel
         dataVectorClip = gpd.clip(dataVector, clipPoly)
 
@@ -356,35 +360,35 @@ def convertToRGB(pathImage):
 
 
 def rasterClassification(inPathImage1, inPathImage2, outPath):
-    if not os.path.exists(outPath):
-        print("YOUHOU")
-        fileName = os.path.basename(outPath)
+    #if not os.path.exists(outPath):
+    print("YOUHOU")
+    fileName = os.path.basename(outPath)
 
-        rasterImage1 = gdal.Open(inPathImage1, gdal.GA_ReadOnly)
-        rasterImage2 = gdal.Open(inPathImage2, gdal.GA_ReadOnly)
+    rasterImage1 = gdal.Open(inPathImage1, gdal.GA_ReadOnly)
+    rasterImage2 = gdal.Open(inPathImage2, gdal.GA_ReadOnly)
 
-        rasterImage1B1 = rasterImage1.GetRasterBand(1).ReadAsArray()
+    rasterImage1B1 = rasterImage1.GetRasterBand(1).ReadAsArray()
 
-        rasterImage2B1 = rasterImage2.GetRasterBand(1).ReadAsArray()
-
-
-        for i in range(rasterImage1.RasterYSize):
-            for j in range(rasterImage1.RasterXSize):
-                if rasterImage1B1[i, j] == 1:
-                    rasterImage1B1[i, j] = 1
-
-                else:
-                    rasterImage1B1[i, j] = rasterImage2B1[i, j]
+    rasterImage2B1 = rasterImage2.GetRasterBand(1).ReadAsArray()
 
 
-        rasterClass = gdal.GetDriverByName("GTiff").Create(outPath,
-                                                           rasterImage1.RasterXSize, rasterImage1.RasterYSize, 1)
-        rasterClass.GetRasterBand(1).WriteArray(rasterImage1B1)
+    for i in range(rasterImage1.RasterYSize):
+        for j in range(rasterImage1.RasterXSize):
+            if rasterImage1B1[i, j] == 1:
+                rasterImage1B1[i, j] = 1
 
-        rasterClass.SetProjection(rasterImage1.GetProjection())
-        rasterClass.SetGeoTransform(rasterImage1.GetGeoTransform())
-        rasterClass.FlushCache()
-        return rasterImage1B1[i, j]
+            else:
+                rasterImage1B1[i, j] = rasterImage2B1[i, j]
+
+    rasterImage2 = None
+    rasterClass = gdal.GetDriverByName("GTiff").Create(outPath,
+                                                       rasterImage1.RasterXSize, rasterImage1.RasterYSize, 1)
+    rasterClass.GetRasterBand(1).WriteArray(rasterImage1B1)
+
+    rasterClass.SetProjection(rasterImage1.GetProjection())
+    rasterClass.SetGeoTransform(rasterImage1.GetGeoTransform())
+    rasterClass.FlushCache()
+    return rasterImage1B1[i, j]
 
 def rasterClassificationTotal(inPathImage1, inPathImage2, outPath, classe):
     if not os.path.exists(outPath):

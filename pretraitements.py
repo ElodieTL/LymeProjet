@@ -149,20 +149,25 @@ def pretraitements(dir, no_det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRa
     raster_intermediaire = os.path.join(detDir, det + "_intermediaire.tif")
     raster_final = os.path.join(detDir, det + "_final.tif")
 
+    # if not os.path.exists(raster_final):
     if nb_raster > 1:  # si plus de 1 raster
-        print("Fusion intra du déterminant:", det)
-        for i in range(0,(nb_raster - 1)):
-            if (i+2) == nb_raster: # si seulement 2 rasters à fusionner ou générer le raster final (combinaison de tous)
-                if nb_raster == 2:
-                    raster_intermediaire = listePath[0]
-                print("Fusion final. Création du raster:", os.path.basename(raster_final))
-                rasterClassification(raster_intermediaire, listePath[i+1], raster_final)
+        if not os.path.exists(raster_final):
+            print("Fusion intra du déterminant:", det)
+            print("Il y a ", nb_raster , " raster a fusionner ensemble.")
+            for i in range(0,(nb_raster - 1)):
+                if (i+2) == nb_raster: # si seulement 2 rasters à fusionner ou générer le raster final (combinaison de tous)
+                    if nb_raster == 2:
+                        raster_intermediaire = listePath[0]
+                    print("Fusion final. Création du raster:", os.path.basename(raster_final))
+                    rasterClassification(raster_intermediaire, listePath[i+1], raster_final)
 
-            elif i == 0 and nb_raster != 2: # début de la fusion, raster 0 avec raster 1
-                rasterClassification(listePath[i], listePath[i + 1], raster_intermediaire)
+                elif i == 0 and nb_raster != 2: # début de la fusion, raster 0 avec raster 1
+                    rasterClassification(listePath[i], listePath[i + 1], raster_intermediaire)
+                    print("Fusion #1.")
 
-            else: # fusion des rasters précédents avec prochain raster de la liste
-                rasterClassification(raster_intermediaire,listePath[i + 1],raster_intermediaire )
+                else: # fusion des rasters précédents avec prochain raster de la liste
+                    rasterClassification(listePath[i + 1], raster_intermediaire,raster_intermediaire )
+                    print("Fusion #" , (i + 2))
 
         return [raster_final]
 
