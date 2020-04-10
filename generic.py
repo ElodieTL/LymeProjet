@@ -221,7 +221,7 @@ def clipVector(inPath, outPath, clipPoly):
 
     if not dataVector.empty:
         # Appliquer un buffer nul (pour gérer les géométries invalides, au besoin).
-        dataVector["geometry"] = dataVector.geometry.buffer(0)
+        dataVector["geometry"] = dataVector.apply(lambda row: row.geometry.buffer(0) if row.geometry.geom_type == "Polygon" else row.geometry, axis=1)
 
         # Découper le fichier vectoriel
         dataVectorClip = gpd.clip(dataVector, clipPoly)
