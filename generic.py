@@ -401,58 +401,20 @@ def rasterClassificationTotal(inPathImage1, inPathImage2, outPath, classe):
         for i in range(rasterImage1.RasterYSize):
             for j in range(rasterImage1.RasterXSize):
                 if rasterImage2B1[i, j] == 1:
-                    rasterImage1B1[i, j] = classe+2
+                    rasterImage1B1[i, j] = classe+1
 
                 else:
                     rasterImage1B1[i, j] = rasterImage1B1[i, j]
 
-
-        rasterClass = gdal.GetDriverByName("GTiff").Create(outPath,
-                                                           rasterImage1.RasterXSize, rasterImage1.RasterYSize, 1)
+        rasterClass = gdal.GetDriverByName("GTiff").Create(outPath, rasterImage1.RasterXSize, rasterImage1.RasterYSize, 1)
         rasterClass.GetRasterBand(1).WriteArray(rasterImage1B1)
 
         rasterClass.SetProjection(rasterImage1.GetProjection())
         rasterClass.SetGeoTransform(rasterImage1.GetGeoTransform())
         rasterClass.FlushCache()
+
         return rasterImage1B1[i, j]
 
-"""def rasterClassification(inPathImage1, inPathImage2, outPath):
-    if not os.path.exists(outPath):
-        fileName = os.path.basename(outPath)
-
-        rasterImage1 = gdal.Open(inPathImage1, gdal.GA_ReadOnly)
-        rasterImage2 = gdal.Open(inPathImage2, gdal.GA_ReadOnly)
-
-        rasterImage1B1 = rasterImage1.GetRasterBand(1).ReadAsArray()
-        rasterImage1B2 = rasterImage1.GetRasterBand(2).ReadAsArray()
-        rasterImage1B3 = rasterImage1.GetRasterBand(3).ReadAsArray()
-
-        rasterImage2B1 = rasterImage1.GetRasterBand(1).ReadAsArray()
-        rasterImage2B2 = rasterImage1.GetRasterBand(2).ReadAsArray()
-        rasterImage2B3 = rasterImage1.GetRasterBand(3).ReadAsArray()
-
-        for i in range(rasterImage1.RasterYSize):
-            for j in range(rasterImage1.RasterXSize):
-                if rasterImage1B1[i, j] != 255 and rasterImage1B2[i, j] != 255 and rasterImage1B3[i, j] != 255:
-                    rasterImage1B1[i, j] = 0
-                    rasterImage1B2[i, j] = 255
-                    rasterImage1B3[i, j] = 0
-
-                else:
-                    rasterImage1B1[i, j] = rasterImage2B1[i, j]
-                    rasterImage1B2[i, j] = rasterImage2B2[i, j]
-                    rasterImage1B3[i, j] = rasterImage2B3[i, j]
-
-        
-        rasterClass = gdal.GetDriverByName("GTiff").Create(outPath,
-                                                           rasterImage1.RasterXSize, rasterImage1.RasterYSize, 3)
-        rasterClass.GetRasterBand(1).WriteArray(rasterImage1B1)
-        rasterClass.GetRasterBand(2).WriteArray(rasterImage1B2)
-        rasterClass.GetRasterBand(3).WriteArray(rasterImage1B3)
-
-        rasterClass.SetProjection(rasterImage1.GetProjection())
-        rasterClass.SetGeoTransform(rasterImage1.GetGeoTransform())
-        rasterClass.FlushCache()"""
 
 def foret(feuillus, conifere, inconnu, dir):
     pathFeuillus = os.path.join(feuillus)

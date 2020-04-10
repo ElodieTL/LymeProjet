@@ -147,11 +147,14 @@ def main(dataDir, ROIPathVector, ROIPathRaster, detList, detPriorite, sourcesLis
     else:
         print("No projection detected for ROI. Impossible to proceed.")
 
+    print(listPath)
     outpathTot = r"Z:\GMT3051\Donnees\classification.tiff"
     image_tot = listPath[0][1]
     for image in range(len(listPath)-1):
-        rasterClassificationTotal(image_tot, listPath[image][1], outpathTot , image)
+        print(image)
+        rasterClassificationTotal(image_tot, listPath[image][1], outpathTot, image)
         image_tot = outpathTot
+        outpathTot = outpathTot[:-5] + str(image) + ".tiff"
         
 if __name__ == "__main__":
     # Initialisation de la fenêtre principale incluant le titre et la taille.
