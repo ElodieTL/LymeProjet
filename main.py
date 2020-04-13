@@ -1,11 +1,12 @@
 from tkinter import filedialog
 from tkinter.tix import *
 from pretraitements import *
+from fusion import *
 
 
 """ Fonction permettant d'extraire les informations demandées par l'utilisateur dans l'application (après avoir cliqué OK). """
 def getValues():
-    # Créer une liste vide des déterminants qui seront traités.
+    # Créer une liste vide des déterminants qui devront être traités.
     detsList = []
 
     # Ajouter l'état des checkBoxes (1 ou 0) dans la liste de déterminants à traiter.
@@ -18,9 +19,10 @@ def getValues():
     detsList.append(varZonesAnthropisées.get())
     detsList.append(varCouvertureSol.get())
 
-    # Créer une liste vide de la priorité des déterminants qui seront traitées.
+    # Créer une liste vide de la priorité des déterminants qui devront être traités.
     detPriorite = []
 
+    # Ajouter la priorité spécifiée pour chacun des déterminant dans la liste.
     detPriorite.append(prioriteForet.get())
     detPriorite.append(prioriteZonesHumides.get())
     detPriorite.append(prioriteEau.get())
@@ -36,6 +38,7 @@ def getValues():
     # Ajouter les sources sélectionnées par l'utilisateur, pour chaque déterminant.
     for det in range(len(detsList)):
         sourcesListDet = []
+
         if det == 0:
             for source in listForet.curselection():
                 sourcesListDet.append(listForet.get(source))
@@ -70,7 +73,6 @@ def getValues():
 
         sourcesListMaster.append(sourcesListDet)
 
-    print("priorite:", detPriorite)
     # Récupérer le répertoire choisi par l'utilisateur.
     dataDir = entryDir.get()
 
@@ -130,37 +132,49 @@ def main(dataDir, ROIPathVector, ROIPathRaster, detList, detPriorite, sourcesLis
     ROICRS, ROICRSStr = extractEPSGVector(ROIDataVector)
 
     # Si le code EPSG de la donnée vectielle de référence est connu, on poursuit. Sinon, on ne peut poursuivre.
-    listPath = [] # liste de tous les rasters devant être utilisés pour le traitement
     if ROICRS is not None:
+        listPathIntra = []  # liste de tous les rasters devant être utilisés pour les traitements.
+
         # Pour chaque déterminant de la liste de déterminants devant être traités.
         for det in range(len(detList)):
-            # Si le déterminant courant doit être traité.
+            # Si le déterminant courant doit être traité (1).
             if detList[det] == 1:
                 # On récupère la liste de sources correspondantes.
                 sources = sourcesList[det]
 
-                # On lance les prétraitements pour le déterminant et les sources courants. Obtient une liste des rasters pertinents.
-                listetemp = pretraitements(dataDir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector, ROIDataVectorJson)
-                for elem in listetemp:
-                    listPath.append([det, elem])
+                # On lance les prétraitements pour le déterminant et les sources courants. On obtient une liste des rasters pertinents.
+                listTemp = pretraitements(dataDir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector, ROIDataVectorJson)
+
+                listPathIntra.append([det, listTemp])
 
     else:
         print("No projection detected for ROI. Impossible to proceed.")
 
-    print(listPath)
-    outpathTot = r"Z:\GMT3051\Donnees\classification.tiff"
-    image_tot = listPath[0][1]
-    for image in range(len(listPath)-1):
-        print(image)
-        rasterClassificationTotal(image_tot, listPath[image][1], outpathTot, image)
-        image_tot = outpathTot
-        outpathTot = outpathTot[:-5] + str(image) + ".tiff"
+    # Fusion intra déterminant.
+    listPathInter = []
+    for det in range(len(listPathIntra)):
+        code = listPathIntra[det][0]
+        if code == 0:
+            raster = foret(listPathIntra[det][1][0], listPathIntra[det][1][1], listPathIntra[det][1][2], os.path.dirname(listPathIntra[det][1][1]))
+            listPathInter.append([code, int(detPriorite[code]), raster])
+
+        else:
+            if len(listPathIntra[det][1]) > 1:
+                raster = fusionIntra(dataDir, listPathIntra[det])
+                listPathInter.append([code, int(detPriorite[code]), raster])
+
+            else:
+                listPathInter.append([code, int(detPriorite[code]), listPathIntra[det][1][0]])
+
+    print(listPathInter)
+
+    fusionInter(dataDir, listPathInter)
         
 if __name__ == "__main__":
     # Initialisation de la fenêtre principale incluant le titre et la taille.
     mainWindow = Tk()
     mainWindow.title("Fusion et classification de déterminants environnementaux")
-    mainWindow.geometry("260x500")
+    mainWindow.geometry("370x500")
 
     # Initialisation d'une barre de défilement.
     scrollbar = Scrollbar(mainWindow)
@@ -181,7 +195,7 @@ if __name__ == "__main__":
 
     # Ajout d'un sous-titre à la fenêtre.
     labelTitre = Label(frame, text="Maladie de Lyme")
-    labelTitre.grid(row=0, columnspan=4)
+    labelTitre.grid(row=0, columnspan=5)
 
     # Ajout d'une légende pour les déterminants.
     labelDet = Label(frame, text="Déterminant")
@@ -193,7 +207,7 @@ if __name__ == "__main__":
 
     # Ajout d'une légende pour les priorités.
     labelPriorite = Label(frame, text="Priorité(s)")
-    labelPriorite.grid(row=1, column=5)
+    labelPriorite.grid(row=1, column=4)
 
     listHeight = 3
 
@@ -209,7 +223,7 @@ if __name__ == "__main__":
     content = StringVar()
     prioriteForet = Entry(frame, textvariable=content)
     prioriteForet.config(width=2)
-    prioriteForet.grid(row=2, column=5)
+    prioriteForet.grid(row=2, column=4)
 
     # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Zones humides.
     labelZonesHumides = Label(frame, text="Zones humides")
@@ -223,7 +237,7 @@ if __name__ == "__main__":
     content = StringVar()
     prioriteZonesHumides = Entry(frame, textvariable=content)
     prioriteZonesHumides.config(width=2)
-    prioriteZonesHumides.grid(row=3, column=5)
+    prioriteZonesHumides.grid(row=3, column=4)
 
     # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Eau.
     labelEau = Label(frame, text="Eau")
@@ -237,7 +251,7 @@ if __name__ == "__main__":
     content = StringVar()
     prioriteEau = Entry(frame, textvariable=content)
     prioriteEau.config(width=2)
-    prioriteEau.grid(row=4, column=5)
+    prioriteEau.grid(row=4, column=4)
 
     # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Parcs.
     labelParcs = Label(frame, text="Parcs")
@@ -251,7 +265,7 @@ if __name__ == "__main__":
     content = StringVar()
     prioriteParcs = Entry(frame, textvariable=content)
     prioriteParcs.config(width=2)
-    prioriteParcs.grid(row=5, column=5)
+    prioriteParcs.grid(row=5, column=4)
 
     # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Zones agricoles.
     labelZonesAgricoles = Label(frame, text="Zones agricoles")
@@ -265,7 +279,7 @@ if __name__ == "__main__":
     content = StringVar()
     prioriteZonesAgricoles = Entry(frame, textvariable=content)
     prioriteZonesAgricoles.config(width=2)
-    prioriteZonesAgricoles.grid(row=6, column=5)
+    prioriteZonesAgricoles.grid(row=6, column=4)
 
     # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Voies de communication.
     labelVoiesCommunication = Label(frame, text="Voies de communication")
@@ -279,7 +293,7 @@ if __name__ == "__main__":
     content = StringVar()
     prioriteVoiesCommunication = Entry(frame, textvariable=content)
     prioriteVoiesCommunication.config(width=2)
-    prioriteVoiesCommunication.grid(row=7, column=5)
+    prioriteVoiesCommunication.grid(row=7, column=4)
 
     # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Zones Anthropisées.
     labelZonesAnthropisées = Label(frame, text="Zones Anthropisées")
@@ -293,7 +307,7 @@ if __name__ == "__main__":
     content = StringVar()
     prioriteZonesAnthropisées = Entry(frame, textvariable=content)
     prioriteZonesAnthropisées.config(width=2)
-    prioriteZonesAnthropisées.grid(row=8, column=5)
+    prioriteZonesAnthropisées.grid(row=8, column=4)
 
     # Ajout d'une légende, d'une case à cocher et d'une liste de sources pour le déterminant Couverture du Sol.
     labelCouvertureSol = Label(frame, text="Couverture du Sol")
@@ -307,40 +321,40 @@ if __name__ == "__main__":
     content = StringVar()
     prioriteCouvertureSol = Entry(frame, textvariable=content)
     prioriteCouvertureSol.config(width=2)
-    prioriteCouvertureSol.grid(row=9, column=5)
+    prioriteCouvertureSol.grid(row=9, column=4)
 
     # Ajout d'une entrée et d'un bouton pour entrer le chemin vers le répertoire où seront enregistré les données.
     labelDir = Label(frame, text="Data Directory:")
     labelDir.grid(row=10, column=0)
     entryDir = Entry(frame)
-    entryDir.grid(row=10, column=1, columnspan=2)
+    entryDir.grid(row=10, column=1, columnspan=3)
     buttonDir = Button(frame, text="...", command=getDir)
-    buttonDir.grid(row=10, column=3)
+    buttonDir.grid(row=10, column=4)
     entryDir.insert(END, "Z:\GMT3051\Donnees")
 
     # Ajout d'une entrée et d'un bouton pour entrer le chemin vers le fichier vectoriel de référence.
     labelVec = Label(frame, text="ROI Vector:")
     labelVec.grid(row=11, column=0)
     entryVec = Entry(frame)
-    entryVec.grid(row=11, column=1, columnspan=2)
+    entryVec.grid(row=11, column=1, columnspan=3)
     buttonVec = Button(frame, text="...", command=getFileVector)
-    buttonVec.grid(row=11, column=3)
+    buttonVec.grid(row=11, column=4)
     entryVec.insert(END, "Z:\GMT3051\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp")
 
     # Ajout d'une entrée et d'un bouton pour entrer le chemin vers le fichier raster de référence.
     labelRaster = Label(frame, text="ROI Raster:")
     labelRaster.grid(row=12, column=0)
     entryRaster = Entry(frame)
-    entryRaster.grid(row=12, column=1, columnspan=2)
+    entryRaster.grid(row=12, column=1, columnspan=3)
     buttonRaster = Button(frame, text="...", command=getFileRaster)
-    buttonRaster.grid(row=12, column=3)
+    buttonRaster.grid(row=12, column=4)
     entryRaster.insert(END, "Z:\GMT3051\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2_30.tif")
 
     # Ajout d'une entrée et d'un bouton pour entrer une taille de pixel.
     labelPixel = Label(frame, text="Pixel Size:")
     labelPixel.grid(row=13, column=0)
     entryPixel = Entry(frame)
-    entryPixel.grid(row=13, column=1, columnspan=2)
+    entryPixel.grid(row=13, column=1, columnspan=3)
     entryPixel.insert(END, "30")
 
     # Ajout de deux boutons pour poursuivre et pour quitter.

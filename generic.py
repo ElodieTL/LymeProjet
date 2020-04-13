@@ -28,7 +28,7 @@ import sys
 import pandas as pd
 import earthpy.spatial as es
 import earthpy.plot as ep
-
+from operator import itemgetter
 
 
 """ Fonction permettant d'extraire le code EPSG (la projection) d'une donnée vectorielle. """
@@ -98,7 +98,7 @@ def listFiles(inDir, criteres, conditions=None):
 # inDir: String représentant le chemin du répertoire devant être créé, s'il n'existe pas.
 def createDir(inDir):
     if not os.path.exists(inDir):
-        print("Creating directory " + inDir + "...")
+        print("Création du répertoire " + inDir + "...")
 
         os.makedirs(inDir)
 
@@ -136,12 +136,12 @@ def createPaths(inDir, baseName, pixelSize, rasterise=False):
 # zip: Boolean représentant si les données à télécharger sont contenues dans un fichier compressé (facultatif).
 def downloadData(url, outPath, pathDir="", compress=False):
     fileName = os.path.basename(url)
-    print("Downloading " + fileName + "...")
+    print("Téléchargement du fichier " + fileName + "...")
 
     urllib.request.urlretrieve(url, outPath)
 
     if compress:
-        print("Unzipping " + fileName + "...")
+        print("Extraction du fichier " + fileName + "...")
         Archive(outPath).extractall(pathDir)
 
 
@@ -151,7 +151,7 @@ def downloadData(url, outPath, pathDir="", compress=False):
 # dstCrs: String représentant le code EPSG de la projection voulue (EPSG:#).
 def reprojectRaster(inPath, outPath, dstCRS):
     fileName = os.path.basename(inPath)
-    print("Reprojecting raster " + fileName + "...")
+    print("Reprojection du raster " + fileName + "...")
 
     # Extraire les métadonnées.
     with rio.open(inPath) as src:
@@ -171,7 +171,7 @@ def reprojectRaster(inPath, outPath, dstCRS):
 # dstCrs: String représentant le code EPSG de la projection voulue (EPSG:#).
 def reprojectVector(vectorData, outPath, dstCRS):
     fileName = os.path.basename(outPath)
-    print("Reprojecting " + fileName.replace("_reproject", "") + "...")
+    print("Reprojection du fichier " + fileName.replace("_reproject", "") + "...")
 
     vectorDataReproject = vectorData.to_crs(dstCRS)
     vectorDataReproject.to_file(outPath)
@@ -190,7 +190,7 @@ def geoToJson(gdf):
 # epsgVector: int représentant le code EPSG de la projection voulue (#).
 def clipRaster(inPath, outPath, clipPoly, epsgVector):
     fileName = os.path.basename(inPath)
-    print("Clipping raster " + fileName + "...")
+    print("Découpage du raster " + fileName + "...")
 
     # Ouvrir le raster.
     raster = rio.open(inPath)
@@ -214,7 +214,7 @@ def clipRaster(inPath, outPath, clipPoly, epsgVector):
 # clip: Boolean indiquant si un fichier découpé a été produit.
 def clipVector(inPath, outPath, clipPoly):
     fileName = os.path.basename(inPath)
-    print("Clipping vector file " + fileName + "...")
+    print("Découpage du fichier vectoriel " + fileName + "...")
 
     # Ouvrir le fichier vectoriel.
     dataVector = gpd.read_file(inPath)
@@ -238,30 +238,46 @@ def clipVector(inPath, outPath, clipPoly):
             return clip
 
         else:
-            print("No data after clipping.")
+            print("Aucune donnée restante après découpage.")
             clip = False
 
             # Supprimer les fichiers afin de ne pas refaire les traitements dans le futur.
-            print("Deleting relevant files")
+            print("Suppression des fichiers liés.")
             for file in glob.glob(inPath.replace("_reproject.shp", "*")):
                 os.remove(file)
 
             return clip
 
 
-""" Fonction permettant d'extraire la hauteur et la largeur d'un pixel pour un raster. """
-# inPath: String représentant le chemin vers le fichier raster entrant.
-# width: nombre représentant la largeur d'un pixel.
-# height: nombre représentant la hauteur d'un pixel.
-def getPixelSize(inPath):
-    # Ouvrir le raster
-    raster = rio.open(inPath)
+""" fonction permettant de codifier le déterminant courant en String """
+# noDet: nombre représentant le code du déterminant.
+# det: String représentant le déterminant sous format texte.
+def getDet(noDet):
+    if noDet == 0:
+        det = "Foret"
 
-    # Extraire la largeur et la hauteur d'un pixel.
-    width = raster.transform[0]
-    height = -(raster.transform[4])
+    elif noDet == 1:
+        det = "Zones humides"
 
-    return width, height
+    elif noDet == 2:
+        det = "Eau"
+
+    elif noDet == 3:
+        det = "Parcs"
+
+    elif noDet == 4:
+        det = "Zones agricoles"
+
+    elif noDet == 5:
+        det = "Voies de communication"
+
+    elif noDet == 6:
+        det = "Zones anthropisees"
+
+    elif noDet == 7:
+        det = "Couverture du sol"
+
+    return det
 
 
 """ Fonction permettant de rééchantillonner un raster. """
@@ -270,7 +286,7 @@ def getPixelSize(inPath):
 # outPath: String représentant le chemin vers le fichier raster sortant.
 def resampleRaster(inPath, inPathRef, outPath):
     fileName = os.path.basename(inPath)
-    print("Resampling raster " + fileName + "...")
+    print("Rééchantillonnage du raster " + fileName + "...")
 
     src = gdal.Open(inPath, gdal.GA_ReadOnly)
     srcProj = src.GetProjection()
@@ -296,7 +312,7 @@ def resampleRaster(inPath, inPathRef, outPath):
 # valeur: String représentant la valeur des données pertinentes qui doivent être rasterisées.
 def rasteriseVector(inPathVector, inPathRaster, outPath, champs, valeur):
     fileName = os.path.basename(inPathVector)
-    print("Rasterising " + fileName + "...")
+    print("Rasterisation du fichier " + fileName + "...")
 
     rasterRef = gdal.Open(inPathRaster, gdal.GA_ReadOnly)
 
@@ -359,36 +375,31 @@ def convertToRGB(pathImage):
     return image_RGB
 
 
-def rasterClassification(inPathImage1, inPathImage2, outPath):
-    #if not os.path.exists(outPath):
-    print("YOUHOU")
-    fileName = os.path.basename(outPath)
+""" Fonction permettant de fusionner deux rasters en priorisant le premier. """
+# inPathRaster1: String représentant le chemin vers le premier raster.
+# inPathTaster2 String représentant le chemin vers le deuxième raster.
+# outPath: String représentant le chemin vers le raster en sortie.
+def rasterClassification(inPathRaster1, inPathRaster2, outPath):
+    raster1 = gdal.Open(inPathRaster1, gdal.GA_ReadOnly)
+    raster2 = gdal.Open(inPathRaster2, gdal.GA_ReadOnly)
 
-    rasterImage1 = gdal.Open(inPathImage1, gdal.GA_ReadOnly)
-    rasterImage2 = gdal.Open(inPathImage2, gdal.GA_ReadOnly)
+    raster1B1 = raster1.GetRasterBand(1).ReadAsArray()
+    raster2B1 = raster2.GetRasterBand(1).ReadAsArray()
 
-    rasterImage1B1 = rasterImage1.GetRasterBand(1).ReadAsArray()
+    for i in range(raster1.RasterYSize):
+        for j in range(raster1.RasterXSize):
+            if raster1B1[i, j] != 1:
+                raster1B1[i, j] = raster2B1[i, j]
 
-    rasterImage2B1 = rasterImage2.GetRasterBand(1).ReadAsArray()
+    del raster2
 
+    rasterClass = gdal.GetDriverByName("GTiff").Create(outPath, raster1.RasterXSize, raster1.RasterYSize, 1)
+    rasterClass.GetRasterBand(1).WriteArray(raster1B1)
 
-    for i in range(rasterImage1.RasterYSize):
-        for j in range(rasterImage1.RasterXSize):
-            if rasterImage1B1[i, j] == 1:
-                rasterImage1B1[i, j] = 1
-
-            else:
-                rasterImage1B1[i, j] = rasterImage2B1[i, j]
-
-    rasterImage2 = None
-    rasterClass = gdal.GetDriverByName("GTiff").Create(outPath,
-                                                       rasterImage1.RasterXSize, rasterImage1.RasterYSize, 1)
-    rasterClass.GetRasterBand(1).WriteArray(rasterImage1B1)
-
-    rasterClass.SetProjection(rasterImage1.GetProjection())
-    rasterClass.SetGeoTransform(rasterImage1.GetGeoTransform())
+    rasterClass.SetProjection(raster1.GetProjection())
+    rasterClass.SetGeoTransform(raster1.GetGeoTransform())
     rasterClass.FlushCache()
-    return rasterImage1B1[i, j]
+
 
 def rasterClassificationTotal(inPathImage1, inPathImage2, outPath, classe):
     if not os.path.exists(outPath):
@@ -419,29 +430,31 @@ def rasterClassificationTotal(inPathImage1, inPathImage2, outPath, classe):
 
         return rasterImage1B1[i, j]
 
-
-def foret(feuillus, conifere, inconnu, dir):
-    pathFeuillus = os.path.join(feuillus)
-    pathConiferes = os.path.join(conifere)
-    pathUnknown = os.path.join(inconnu)
-
+""" Fonction permettant de faire la fusion intra déterminant de Forêt (RN Canada). """
+# inPathFeuillus: String représentant le chemin vers le fichier raster des feuillus.
+# inPathConifères: String représentant le chemin vers le fichier raster des conifères.
+# inPathInconnu: String représentant le chemin vers le fichier raster de la végétation iconnue.
+def foret(inPathFeuillus, inPathConiferes, inPathInconnu, dir):
+    # Création de Strings représentant les chemins vers de nouveaux fichiers créés.
     pathAll = os.path.join(dir, "NFI_MODIS250m_2011_kNN_SpeciesGroups_All_Spp_v1_resample_30.tif")
-
     pathClass = os.path.join(dir, "NFI_MODIS250m_2011_kNN_SpeciesGroups_Class_Spp_v1_resample_30.tif")
 
+    # Si la fusion des trois rasters n'a pas déjà été faite.
     if not os.path.exists(pathAll):
-        print("Stacking rasters...")
+        print("Fusion des rasters...")
 
         # Création d'une liste des fichiers raster pertinents.
-        liste = [pathFeuillus, pathConiferes, pathUnknown]
+        list = [inPathFeuillus, inPathConiferes, inPathInconnu]
 
         # Fusionner les rasters contenus dans la liste.
-        es.stack(liste, pathAll)  # 2 = Feuillus, 1 = Conifères, 0 = Inconnu.
+        es.stack(list, pathAll)  # 2 = Feuillus, 1 = Conifères, 0 = Inconnu.
 
+    # Si la classification n'a pas été faite.
     if not os.path.exists(pathClass):
         fileName = os.path.basename(pathClass)
-        print("Classifying raster " + fileName + "...")
+        print("Classification du raster " + fileName + "...")
 
+        # Ouverture des données.
         rasterAll = gdal.Open(pathAll, gdal.GA_ReadOnly)
         rasterAllBand0 = rasterAll.GetRasterBand(1).ReadAsArray()
         rasterAllBand1 = rasterAll.GetRasterBand(2).ReadAsArray()
@@ -449,8 +462,7 @@ def foret(feuillus, conifere, inconnu, dir):
 
         for i in range(rasterAll.RasterYSize):
             for j in range(rasterAll.RasterXSize):
-                if rasterAllBand0[i, j] == 0 and rasterAllBand1[i, j] == 0 and rasterAllBand2[
-                    i, j] == 0:  # Aucune forêt
+                if rasterAllBand0[i, j] == 0 and rasterAllBand1[i, j] == 0 and rasterAllBand2[i, j] == 0:  # Aucune forêt
                     rasterAllBand0[i, j] = 0
                     rasterAllBand1[i, j] = 0  # Noir
                     rasterAllBand2[i, j] = 0
