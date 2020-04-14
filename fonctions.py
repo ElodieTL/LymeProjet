@@ -32,12 +32,12 @@ from operator import itemgetter
 
 
 """ Fonction permettant d'extraire le code EPSG (la projection) d'une donnée vectorielle. """
-# vectorData: Objet de type geopandas représentant la donnée vectorielle.
+# inVectorData: Objet de type geopandas représentant la donnée vectorielle.
 # vectorDataCRS: String représentant le code EPSG de la projection utilisée (#).
 # vectorDataCRSStr: String représentant le code EPSG de la projection utilisée (EPSG:#).
-def extractEPSGVector(vectorData):
+def extractEPSGVector(inVectorData):
     # Extraire le code EPSG (la projection) du fichier vectoriel.
-    srs = vectorData.crs
+    srs = inVectorData.crs
 
     vectorDataCRS = re.search("epsg:(.*)", str(srs))
 
@@ -54,12 +54,12 @@ def extractEPSGVector(vectorData):
 
 
 """ Fonction permettant d'extraire le code EPSG (la projection) de données de type raster. """
-# inPath: String représentant le chemin vers le fichier raster entrant.
+# inRasterPath: String représentant le chemin vers le fichier raster entrant.
 # rasterCRS: String représentant le code EPSG de la projection utilisée (#).
 # rasterCRSStr: String représentant le code EPSG de la projection utilisée (EPSG:#).
-def extractEPSGRaster(inPath):
+def extractEPSGRaster(inRasterPath):
     # Ouvrir le raster pour recherche.
-    raster = gdal.Open(inPath, gdal.GA_ReadOnly)
+    raster = gdal.Open(inRasterPath, gdal.GA_ReadOnly)
 
     # Extraire le code EPSG (la projection) du raster.
     rasterCRS = osr.SpatialReference(wkt=raster.GetProjection()).GetAttrValue("AUTHORITY", 1)
@@ -76,22 +76,22 @@ def extractEPSGRaster(inPath):
 
 """ Fonction permettant de créer une liste des chemins menant au données. """
 # inDir: String représentant le chemin vers le répertoire contenant les fichiers du déterminants.
-# criteres: tuple des critèred de sélection des fichiers désirés se terminant par... (".shp", ".pdf").
+# criteres: tuple des critères de sélection des fichiers désirés se terminant par... (".shp", ".pdf").
 # conditions: tuple des critères négatifs de sélection des fichiers désirés ne se terminant pas par... (facultatif).
-# fichiers: Liste comportant les chemins des fichiers désirés.
+# listFichiers: Liste comportant les chemins des fichiers désirés.
 def listFiles(inDir, criteres, conditions=None):
-    fichiers = []
+    listFichiers = []
 
     for root, dirs, files in os.walk(inDir):
         for file in files:
             if conditions is None:
                 if file.endswith(criteres):
-                    fichiers.append(os.path.join(root, file))
+                    listFichiers.append(os.path.join(root, file))
             else:
                 if file.endswith(criteres) and not file.endswith(conditions):
-                    fichiers.append(os.path.join(root, file))
+                    listFichiers.append(os.path.join(root, file))
 
-    return fichiers
+    return listFichiers
 
 
 """ Fonction permettant de créer un nouveau répertoire pour le téléchargement de données. """
@@ -146,35 +146,35 @@ def downloadData(url, outPath, pathDir="", compress=False):
 
 
 """ Fonction permettant de reprojeter un fichier de type raster. """
-# inPath: String représentant le chemin vers le fichier raster entrant.
-# outPath: String représentant le chemin vers le fichier raster sortant.
+# inRasterPath: String représentant le chemin vers le fichier raster entrant.
+# outRasterPath: String représentant le chemin vers le fichier raster sortant.
 # dstCrs: String représentant le code EPSG de la projection voulue (EPSG:#).
-def reprojectRaster(inPath, outPath, dstCRS):
-    fileName = os.path.basename(inPath)
+def reprojectRaster(inRasterPath, outRasterPath, dstCRS):
+    fileName = os.path.basename(inRasterPath)
     print("Reprojection du raster " + fileName + "...")
 
     # Extraire les métadonnées.
-    with rio.open(inPath) as src:
+    with rio.open(inRasterPath) as src:
         transform, width, height = calculate_default_transform(src.crs, dstCRS, src.width, src.height, *src.bounds)
         kwargs = src.meta.copy()
         kwargs.update({"crs": dstCRS, "transform": transform, "width": width, "height": height})
 
         # Effectuer la reprojection et exporter le raster résultant.
-        with rio.open(outPath, "w", **kwargs) as dst:
+        with rio.open(outRasterPath, "w", **kwargs) as dst:
             for i in range(1, src.count + 1):
                 reproject(source=rio.band(src, i), destination=rio.band(dst, i), src_transform=src.transform, src_crs=src.crs, dst_transform=transform, dst_crs=dstCRS, resampling=Resampling.nearest)
 
 
 """ Fonction permettant de reprojeter un fichier de formes. """
-# vectorData: Objet de type geopandas représentant le fichier vectoriel entrant.
-# outPath: String représentant le chemin vers le fichier vectoriel sortant.
+# inVectorData: Objet de type geopandas représentant le fichier vectoriel entrant.
+# outVectorPath: String représentant le chemin vers le fichier vectoriel sortant.
 # dstCrs: String représentant le code EPSG de la projection voulue (EPSG:#).
-def reprojectVector(vectorData, outPath, dstCRS):
-    fileName = os.path.basename(outPath)
+def reprojectVector(inVectorData, outVectorPath, dstCRS):
+    fileName = os.path.basename(outVectorPath)
     print("Reprojection du fichier " + fileName.replace("_reproject", "") + "...")
 
-    vectorDataReproject = vectorData.to_crs(dstCRS)
-    vectorDataReproject.to_file(outPath)
+    vectorDataReproject = inVectorData.to_crs(dstCRS)
+    vectorDataReproject.to_file(outVectorPath)
 
 
 """ Fonction permettant de transformer une géométrie d'une geodataframe en format JSON. """
@@ -184,40 +184,40 @@ def geoToJson(gdf):
 
 
 """ Fonction permettant de découper un raster selon une région d'intérêt. """
-# inPath: String représentant le chemin vers le fichier raster entrant.
-# outPath: String représentant le chemin vers le fichier raster sortant.
+# inRasterPath: String représentant le chemin vers le fichier raster entrant.
+# outRasterPath: String représentant le chemin vers le fichier raster sortant.
 # clipPoly: Objet de type JSON représentant le polygone servant au découpage.
-# epsgVector: int représentant le code EPSG de la projection voulue (#).
-def clipRaster(inPath, outPath, clipPoly, epsgVector):
-    fileName = os.path.basename(inPath)
+# dstCRS: int représentant le code EPSG de la projection voulue (#).
+def clipRaster(inRasterPath, outRasterPath, clipPoly, dstCRS):
+    fileName = os.path.basename(inRasterPath)
     print("Découpage du raster " + fileName + "...")
 
     # Ouvrir le raster.
-    raster = rio.open(inPath)
+    raster = rio.open(inRasterPath)
 
     # Découper le raster.
     outRaster, outTransform = mask(dataset=raster, shapes=clipPoly, crop=True)
 
     # Mettre à jour les métadonnées.
     outMeta = raster.meta.copy()
-    outMeta.update({"driver": "GTiff", "height": outRaster.shape[1], "width": outRaster.shape[2], "transform": outTransform, "crs": pycrs.parse.from_epsg_code(epsgVector).to_proj4()})
+    outMeta.update({"driver": "GTiff", "height": outRaster.shape[1], "width": outRaster.shape[2], "transform": outTransform, "crs": pycrs.parse.from_epsg_code(dstCRS).to_proj4()})
 
     # Exporter le raster résultant.
-    with rio.open(outPath, "w", **outMeta) as dest:
+    with rio.open(outRasterPath, "w", **outMeta) as dest:
         dest.write(outRaster)
 
 
 """ Fonction permettant de découper un fichier vectoriel selon une région d'intérêt. """
-# inPath: String représentant le chemin vers le fichier vectoriel entrant.
-# outPath: String représentant le chemin vers le fichier vectoriel sortant.
+# inVectorPath: String représentant le chemin vers le fichier vectoriel entrant.
+# outVectorPath: String représentant le chemin vers le fichier vectoriel sortant.
 # clipPoly: Objet de type geopandas servant au découpage.
 # clip: Boolean indiquant si un fichier découpé a été produit.
-def clipVector(inPath, outPath, clipPoly):
-    fileName = os.path.basename(inPath)
+def clipVector(inVectorPath, outVectorPath, clipPoly):
+    fileName = os.path.basename(inVectorPath)
     print("Découpage du fichier vectoriel " + fileName + "...")
 
     # Ouvrir le fichier vectoriel.
-    dataVector = gpd.read_file(inPath)
+    dataVector = gpd.read_file(inVectorPath)
 
     if not dataVector.empty:
         # Appliquer un buffer nul (pour gérer les géométries invalides, au besoin).
@@ -232,7 +232,7 @@ def clipVector(inPath, outPath, clipPoly):
 
         if not dataVectorClip.empty:
             # Exporter le raster résultant.
-            dataVectorClip.to_file(outPath)
+            dataVectorClip.to_file(outVectorPath)
             clip = True
 
             return clip
@@ -243,7 +243,7 @@ def clipVector(inPath, outPath, clipPoly):
 
             # Supprimer les fichiers afin de ne pas refaire les traitements dans le futur.
             print("Suppression des fichiers liés.")
-            for file in glob.glob(inPath.replace("_reproject.shp", "*")):
+            for file in glob.glob(inVectorPath.replace("_reproject.shp", "*")):
                 os.remove(file)
 
             return clip
@@ -251,51 +251,51 @@ def clipVector(inPath, outPath, clipPoly):
 
 """ fonction permettant de codifier le déterminant courant en String """
 # noDet: nombre représentant le code du déterminant.
-# det: String représentant le déterminant sous format texte.
+# strDet: String représentant le déterminant sous format texte.
 def getDet(noDet):
     if noDet == 0:
-        det = "Foret"
+        strDet = "Foret"
 
     elif noDet == 1:
-        det = "Zones humides"
+        strDet = "Zones humides"
 
     elif noDet == 2:
-        det = "Eau"
+        strDet = "Eau"
 
     elif noDet == 3:
-        det = "Parcs"
+        strDet = "Parcs"
 
     elif noDet == 4:
-        det = "Zones agricoles"
+        strDet = "Zones agricoles"
 
     elif noDet == 5:
-        det = "Voies de communication"
+        strDet = "Voies de communication"
 
     elif noDet == 6:
-        det = "Zones anthropisees"
+        strDet = "Zones anthropisees"
 
     elif noDet == 7:
-        det = "Couverture du sol"
+        strDet = "Couverture du sol"
 
-    return det
+    return strDet
 
 
 """ Fonction permettant de rééchantillonner un raster. """
-# inPath: String représentant le chemin vers le fichier raster entrant.
-# inPathRef: String représentant le chemin vers le fichier raster  de référence.
-# outPath: String représentant le chemin vers le fichier raster sortant.
-def resampleRaster(inPath, inPathRef, outPath):
-    fileName = os.path.basename(inPath)
+# inRasterPath: String représentant le chemin vers le fichier raster entrant.
+# inRefRasterPath: String représentant le chemin vers le fichier raster  de référence.
+# outRasterPath: String représentant le chemin vers le fichier raster sortant.
+def resampleRaster(inRasterPath, inRefRasterPath, outRasterPath):
+    fileName = os.path.basename(inRasterPath)
     print("Rééchantillonnage du raster " + fileName + "...")
 
-    src = gdal.Open(inPath, gdal.GA_ReadOnly)
+    src = gdal.Open(inRasterPath, gdal.GA_ReadOnly)
     srcProj = src.GetProjection()
 
-    ref = gdal.Open(inPathRef, gdal.GA_ReadOnly)
+    ref = gdal.Open(inRefRasterPath, gdal.GA_ReadOnly)
     refProj = ref.GetProjection()
     refTrans = ref.GetGeoTransform()
 
-    out = gdal.GetDriverByName("GTiff").Create(outPath, ref.RasterXSize, ref.RasterYSize, 1, gdal.GDT_Byte)
+    out = gdal.GetDriverByName("GTiff").Create(outRasterPath, ref.RasterXSize, ref.RasterYSize, 1, gdal.GDT_Byte)
     out.SetGeoTransform(refTrans)
     out.SetProjection(refProj)
 
@@ -305,21 +305,22 @@ def resampleRaster(inPath, inPathRef, outPath):
 
 
 """ Fonction permettant de rasteriser un fichier vectoriel. """
-# inPathVector: String représentant le chemin vers le fichier vectoriel entrant.
-# inPathRaster: String représentant le chemin vers le fichier raster servant de référence.
-# outPath: String représentant le chemin vers le fichier raster sortant.
+# inVectorPath: String représentant le chemin vers le fichier vectoriel entrant.
+# inRasterPath: String représentant le chemin vers le fichier raster servant de référence.
+# outRasterPath: String représentant le chemin vers le fichier raster sortant.
 # champs: String représentant le champs où sélectionner les données pertinentes.
 # valeur: String représentant la valeur des données pertinentes qui doivent être rasterisées.
-def rasteriseVector(inPathVector, inPathRaster, outPath, champs, valeur):
-    fileName = os.path.basename(inPathVector)
+# noDet: nombre correspondant au numéro du déterminant.
+def rasteriseVector(inVectorPath, inRasterPath, outRasterPath, champs, valeur, noDet):
+    fileName = os.path.basename(inVectorPath)
     print("Rasterisation du fichier " + fileName + "...")
 
-    rasterRef = gdal.Open(inPathRaster, gdal.GA_ReadOnly)
+    rasterRef = gdal.Open(inRasterPath, gdal.GA_ReadOnly)
 
-    vectorData = ogr.Open(inPathVector)
+    vectorData = ogr.Open(inVectorPath)
     vectorLayer = vectorData.GetLayer()
 
-    out = gdal.GetDriverByName("GTiff").Create(outPath, rasterRef.RasterXSize, rasterRef.RasterYSize, 1, gdal.GDT_Byte)
+    out = gdal.GetDriverByName("GTiff").Create(outRasterPath, rasterRef.RasterXSize, rasterRef.RasterYSize, 1, gdal.GDT_Byte)
     out.SetProjection(rasterRef.GetProjectionRef())
     out.SetGeoTransform(rasterRef.GetGeoTransform())
 
@@ -332,66 +333,52 @@ def rasteriseVector(inPathVector, inPathRaster, outPath, champs, valeur):
     band.SetNoDataValue(-9999)
     band.FlushCache()
 
-    gdal.RasterizeLayer(out, [1], vectorLayer, None, None, [1])
-
-
-def convertToRGB(pathImage):
-    fileName = os.path.basename(pathImage)
-    image = gdal.Open(pathImage, gdal.GA_ReadOnly)
-    imageBande1 = image.GetRasterBand(1).ReadAsArray()
-    pathImage2 = pathImage[:-5] + "_RGB.tiff"
-
-
-    image_RGB = gdal.GetDriverByName("GTiff").Create(pathImage2,
-                                                       image.RasterXSize, image.RasterYSize, 3)
-    image_RGB.GetRasterBand(1).WriteArray(imageBande1)
-    image_RGB.GetRasterBand(2).WriteArray(imageBande1)
-    image_RGB.GetRasterBand(3).WriteArray(imageBande1)
-
-    rasterImage1B1 = image_RGB.GetRasterBand(1).ReadAsArray()
-    rasterImage1B2 = image_RGB.GetRasterBand(2).ReadAsArray()
-    rasterImage1B3 = image_RGB.GetRasterBand(3).ReadAsArray()
-
-    for i in range(image.RasterYSize):
-        for j in range(image.RasterXSize):
-            if imageBande1[i, j] == 0:
-                rasterImage1B1[i, j] = 255
-                rasterImage1B2[i, j] = 255
-                rasterImage1B3[i, j] = 255
-
-            elif imageBande1[i, j] == 1:
-                rasterImage1B1[i, j] = 0
-                rasterImage1B2[i, j] = 0
-                rasterImage1B3[i, j] = 0
-
-    image_RGB.GetRasterBand(1).WriteArray(rasterImage1B1)
-    image_RGB.GetRasterBand(2).WriteArray(rasterImage1B2)
-    image_RGB.GetRasterBand(3).WriteArray(rasterImage1B3)
-
-    image_RGB.SetProjection(image.GetProjection())
-    image_RGB.SetGeoTransform(image.GetGeoTransform())
-    image_RGB.FlushCache()
-
-    return image_RGB
+    gdal.RasterizeLayer(out, [1], vectorLayer, None, None, [5 * noDet])
 
 
 """ Fonction permettant de fusionner deux rasters en priorisant le premier. """
-# inPathRaster1: String représentant le chemin vers le premier raster.
-# inPathTaster2 String représentant le chemin vers le deuxième raster.
-# outPath: String représentant le chemin vers le raster en sortie.
-def rasterClassification(inPathRaster1, inPathRaster2, outPath):
-    raster1 = gdal.Open(inPathRaster1, gdal.GA_ReadOnly)
-    raster2 = gdal.Open(inPathRaster2, gdal.GA_ReadOnly)
+# inRaster1Path: String représentant le chemin vers le premier raster.
+# inRaster1Path: String représentant le chemin vers le deuxième raster.
+# outRasterPath: String représentant le chemin vers le raster en sortie.
+# noDet: nombre représentant le numéro du déterminant.
+def rasterClassification(inRaster1Path, inRaster2Path, outRasterPath, noDet):
+    raster1 = gdal.Open(inRaster1Path, gdal.GA_ReadOnly)
+    raster2 = gdal.Open(inRaster2Path, gdal.GA_ReadOnly)
+
+    raster1B1 = raster1.GetRasterBand(1).ReadAsArray()
+    raster2B1 = raster2.GetRasterBand(1).ReadAsArray()
+
+    for i in range(raster1.RasterYSize):
+        for j in range(raster1.RasterYSize):
+            if raster1B1[i, j] != 5 * noDet:
+                raster1B1[i, j] = raster2B1[i, j]
+
+    del raster2
+
+    rasterClass = gdal.GetDriverByName("GTiff").Create(outRasterPath, raster1.RasterXSize, raster1.RasterYSize, 1)
+    rasterClass.GetRasterBand(1).WriteArray(raster1B1)
+
+    rasterClass.SetProjection(raster1.GetProjection())
+    rasterClass.SetGeoTransform(raster1.GetGeoTransform())
+    rasterClass.FlushCache()
+
+
+def rasterClassificationTotale(inRaster1Path, inRaster2Path, outPath, noDet2):
+    raster1 = gdal.Open(inRaster1Path, gdal.GA_ReadOnly)
+    raster2 = gdal.Open(inRaster2Path, gdal.GA_ReadOnly)
 
     raster1B1 = raster1.GetRasterBand(1).ReadAsArray()
     raster2B1 = raster2.GetRasterBand(1).ReadAsArray()
 
     for i in range(raster1.RasterYSize):
         for j in range(raster1.RasterXSize):
-            if raster1B1[i, j] != 1:
-                raster1B1[i, j] = raster2B1[i, j]
+            if noDet2 == 0:
+                if raster2B1[i, j] in range(1, 4):
+                    raster1B1[i, j] = raster2B1[i, j]
 
-    del raster2
+            else:
+                if raster2B1[i, j] == 5 * noDet2:
+                    raster1B1[i, j] = raster2B1[i, j]
 
     rasterClass = gdal.GetDriverByName("GTiff").Create(outPath, raster1.RasterXSize, raster1.RasterYSize, 1)
     rasterClass.GetRasterBand(1).WriteArray(raster1B1)
@@ -400,35 +387,6 @@ def rasterClassification(inPathRaster1, inPathRaster2, outPath):
     rasterClass.SetGeoTransform(raster1.GetGeoTransform())
     rasterClass.FlushCache()
 
-
-def rasterClassificationTotal(inPathImage1, inPathImage2, outPath, classe):
-    if not os.path.exists(outPath):
-        fileName = os.path.basename(outPath)
-
-        rasterImage1 = gdal.Open(inPathImage1, gdal.GA_ReadOnly)
-        rasterImage2 = gdal.Open(inPathImage2, gdal.GA_ReadOnly)
-
-        rasterImage1B1 = rasterImage1.GetRasterBand(1).ReadAsArray()
-
-        rasterImage2B1 = rasterImage2.GetRasterBand(1).ReadAsArray()
-
-
-        for i in range(rasterImage1.RasterYSize):
-            for j in range(rasterImage1.RasterXSize):
-                if rasterImage2B1[i, j] == 1:
-                    rasterImage1B1[i, j] = classe+1
-
-                else:
-                    rasterImage1B1[i, j] = rasterImage1B1[i, j]
-
-        rasterClass = gdal.GetDriverByName("GTiff").Create(outPath, rasterImage1.RasterXSize, rasterImage1.RasterYSize, 1)
-        rasterClass.GetRasterBand(1).WriteArray(rasterImage1B1)
-
-        rasterClass.SetProjection(rasterImage1.GetProjection())
-        rasterClass.SetGeoTransform(rasterImage1.GetGeoTransform())
-        rasterClass.FlushCache()
-
-        return rasterImage1B1[i, j]
 
 """ Fonction permettant de faire la fusion intra déterminant de Forêt (RN Canada). """
 # inPathFeuillus: String représentant le chemin vers le fichier raster des feuillus.
@@ -461,36 +419,24 @@ def foret(inPathFeuillus, inPathConiferes, inPathInconnu, dir):
         rasterAllBand2 = rasterAll.GetRasterBand(3).ReadAsArray()
 
         for i in range(rasterAll.RasterYSize):
-            for j in range(rasterAll.RasterXSize):
+            for j in range(rasterAll.RasterYSize):
                 if rasterAllBand0[i, j] == 0 and rasterAllBand1[i, j] == 0 and rasterAllBand2[i, j] == 0:  # Aucune forêt
                     rasterAllBand0[i, j] = 0
-                    rasterAllBand1[i, j] = 0  # Noir
-                    rasterAllBand2[i, j] = 0
 
                 elif rasterAllBand0[i, j] > 50:  # Feuillus
-                    rasterAllBand0[i, j] = 0
-                    rasterAllBand1[i, j] = 255  # Vert
-                    rasterAllBand2[i, j] = 0
+                    rasterAllBand0[i, j] = 1
 
                 elif rasterAllBand1[i, j] > 50:  # Conifères
-                    rasterAllBand0[i, j] = 0
-                    rasterAllBand1[i, j] = 75  # Vert foncé
-                    rasterAllBand2[i, j] = 0
+                    rasterAllBand0[i, j] = 2
 
                 elif rasterAllBand2[i, j] > 50:  # Inconnu
                     rasterAllBand0[i, j] = 0
-                    rasterAllBand1[i, j] = 0  # Noir
-                    rasterAllBand2[i, j] = 0
 
                 else:  # Mixte
-                    rasterAllBand0[i, j] = 255
-                    rasterAllBand1[i, j] = 255  # Jaune
-                    rasterAllBand2[i, j] = 0
+                    rasterAllBand0[i, j] = 3
 
-        rasterClass = gdal.GetDriverByName("GTiff").Create(pathClass, rasterAll.RasterXSize, rasterAll.RasterYSize, 3)
+        rasterClass = gdal.GetDriverByName("GTiff").Create(pathClass, rasterAll.RasterXSize, rasterAll.RasterYSize, 1)
         rasterClass.GetRasterBand(1).WriteArray(rasterAllBand0)
-        rasterClass.GetRasterBand(2).WriteArray(rasterAllBand1)
-        rasterClass.GetRasterBand(3).WriteArray(rasterAllBand2)
 
         rasterClass.SetProjection(rasterAll.GetProjection())
         rasterClass.SetGeoTransform(rasterAll.GetGeoTransform())

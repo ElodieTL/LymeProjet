@@ -7,80 +7,80 @@ from fusion import *
 """ Fonction permettant d'extraire les informations demandées par l'utilisateur dans l'application (après avoir cliqué OK). """
 def getValues():
     # Créer une liste vide des déterminants qui devront être traités.
-    detsList = []
+    listDets = []
 
     # Ajouter l'état des checkBoxes (1 ou 0) dans la liste de déterminants à traiter.
-    detsList.append(varForet.get())
-    detsList.append(varZonesHumides.get())
-    detsList.append(varEau.get())
-    detsList.append(varParcs.get())
-    detsList.append(varZonesAgricoles.get())
-    detsList.append(varVoiesCommunication.get())
-    detsList.append(varZonesAnthropisées.get())
-    detsList.append(varCouvertureSol.get())
+    listDets.append(varForet.get())
+    listDets.append(varZonesHumides.get())
+    listDets.append(varEau.get())
+    listDets.append(varParcs.get())
+    listDets.append(varZonesAgricoles.get())
+    listDets.append(varVoiesCommunication.get())
+    listDets.append(varZonesAnthropisées.get())
+    listDets.append(varCouvertureSol.get())
 
     # Créer une liste vide de la priorité des déterminants qui devront être traités.
-    detPriorite = []
+    listPriorites = []
 
-    # Ajouter la priorité spécifiée pour chacun des déterminant dans la liste.
-    detPriorite.append(prioriteForet.get())
-    detPriorite.append(prioriteZonesHumides.get())
-    detPriorite.append(prioriteEau.get())
-    detPriorite.append(prioriteParcs.get())
-    detPriorite.append(prioriteZonesAgricoles.get())
-    detPriorite.append(prioriteVoiesCommunication.get())
-    detPriorite.append(prioriteZonesAnthropisées.get())
-    detPriorite.append(prioriteCouvertureSol.get())
+    # Ajouter la priorité spécifiée pour chacun des déterminants à la liste.
+    listPriorites.append(prioriteForet.get())
+    listPriorites.append(prioriteZonesHumides.get())
+    listPriorites.append(prioriteEau.get())
+    listPriorites.append(prioriteParcs.get())
+    listPriorites.append(prioriteZonesAgricoles.get())
+    listPriorites.append(prioriteVoiesCommunication.get())
+    listPriorites.append(prioriteZonesAnthropisées.get())
+    listPriorites.append(prioriteCouvertureSol.get())
 
     # Créer une liste vide des sources qui seront traitées.
-    sourcesListMaster = []
+    listSourcesAll = []
 
     # Ajouter les sources sélectionnées par l'utilisateur, pour chaque déterminant.
-    for det in range(len(detsList)):
-        sourcesListDet = []
+    for noDet in range(len(listDets)):
+        listSourcesDet = []
 
-        if det == 0:
+        if noDet == 0:
             for source in listForet.curselection():
-                sourcesListDet.append(listForet.get(source))
+                listSourcesDet.append(listForet.get(source))
 
-        elif det == 1:
+        elif noDet == 1:
             for source in listZonesHumides.curselection():
-                sourcesListDet.append(listZonesHumides.get(source))
+                listSourcesDet.append(listZonesHumides.get(source))
 
-        elif det == 2:
+        elif noDet == 2:
             for source in listEau.curselection():
-                sourcesListDet.append(listEau.get(source))
+                listSourcesDet.append(listEau.get(source))
 
-        elif det == 3:
+        elif noDet == 3:
             for source in listParcs.curselection():
-                sourcesListDet.append(listParcs.get(source))
+                listSourcesDet.append(listParcs.get(source))
 
-        elif det == 4:
+        elif noDet == 4:
             for source in listZonesAgricoles.curselection():
-                sourcesListDet.append(listZonesAgricoles.get(source))
+                listSourcesDet.append(listZonesAgricoles.get(source))
 
-        elif det == 5:
+        elif noDet == 5:
             for source in listVoiesCommunication.curselection():
-                sourcesListDet.append(listVoiesCommunication.get(source))
+                listSourcesDet.append(listVoiesCommunication.get(source))
 
-        elif det == 6:
+        elif noDet == 6:
             for source in listZonesAnthropisées.curselection():
-                sourcesListDet.append(listZonesAnthropisées.get(source))
+                listSourcesDet.append(listZonesAnthropisées.get(source))
 
-        elif det == 7:
+        elif noDet == 7:
             for source in listCouvertureSol.curselection():
-                sourcesListDet.append(listCouvertureSol.get(source))
+                listSourcesDet.append(listCouvertureSol.get(source))
 
-        sourcesListMaster.append(sourcesListDet)
+        listSourcesAll.append(listSourcesDet)
 
     # Récupérer le répertoire choisi par l'utilisateur.
     dataDir = entryDir.get()
 
     # Récupérer le fichier vectoriel de référence choisi par l'utilisateur.
-    vectorBase = entryVec.get()
+    baseVector = entryVec.get()
 
     # Récupérer le raster de référence choisi par l'utilisateur.
-    rasterBase = entryRaster.get()
+    baseRaster = entryRaster.get()
 
     # Récupérer la dimension d'un pixel.
     pixelSize = entryPixel.get()
@@ -89,7 +89,7 @@ def getValues():
     mainWindow.destroy()
 
     # Appeler la fonction principale.
-    main(dataDir, vectorBase, rasterBase, detsList, detPriorite, sourcesListMaster, pixelSize)
+    main(dataDir, baseVector, baseRaster, listDets, listPriorites, listSourcesAll, pixelSize)
 
 
 """ Fonction permettant de récupérer le chemin du répertoire où seront enregistrées les données. """
@@ -115,60 +115,61 @@ def getFileRaster():
 
 """ Fonction permettant de lancer les traitements. """
 # dataDir: String représentant le répertoire où seront enregistrées les données.
-# ROIPathVector: String représentant le chemin du fichier vectoriel de référence.
-# ROIPathRaster: String représentant le chemin du fichier raster de référence.
-# detList: Liste contenant les déterminants devant être traités.
-# detPriorite: Liste contenant l'ordre de priorité des déterminants
-# sourcesList: Liste contenant les sources de données devant être traitées.
+# ROIVectorPath: String représentant le chemin du fichier vectoriel de référence.
+# ROIRasterPath: String représentant le chemin du fichier raster de référence.
+# listDets: Liste contenant les déterminants devant être traités.
+# listPriorites: Liste contenant l'ordre de priorité des déterminants.
+# listSources: Liste contenant les sources de données devant être traitées.
 # pixelSize: String représentant la taille d'un pixel (utilisé pour les noms de fichiers).
-def main(dataDir, ROIPathVector, ROIPathRaster, detList, detPriorite, sourcesList, pixelSize):
+def main(dataDir, ROIVectorPath, ROIRasterPath, listDets, listPriorites, listSources, pixelSize):
     # Lecture des données du fichier vectoriel de référence.
-    ROIDataVector = gpd.read_file(ROIPathVector)
+    ROIVectorData = gpd.read_file(ROIVectorPath)
 
     # Transformer la composante géométrique de la donnée vectorielle de référence en format json.
-    ROIDataVectorJson = geoToJson(ROIDataVector)
+    ROIVectorDataJson = geoToJson(ROIVectorData)
 
     # Extraire le code EPSG (la projection) de la donnée vectorielle de référence sous deux formats.
-    ROICRS, ROICRSStr = extractEPSGVector(ROIDataVector)
+    ROICRS, ROICRSStr = extractEPSGVector(ROIVectorData)
 
     # Si le code EPSG de la donnée vectielle de référence est connu, on poursuit. Sinon, on ne peut poursuivre.
     if ROICRS is not None:
-        listPathIntra = []  # liste de tous les rasters devant être utilisés pour les traitements.
+        listPathIntra = []  # Liste de listes de tous les rasters devant être utilisés pour les fusions intra-déterminant.
 
         # Pour chaque déterminant de la liste de déterminants devant être traités.
-        for det in range(len(detList)):
+        for noDet in range(len(listDets)):
             # Si le déterminant courant doit être traité (1).
-            if detList[det] == 1:
+            if listDets[noDet] == 1:
                 # On récupère la liste de sources correspondantes.
-                sources = sourcesList[det]
+                listSourcesDet = listSources[noDet]
 
                 # On lance les prétraitements pour le déterminant et les sources courants. On obtient une liste des rasters pertinents.
-                listTemp = pretraitements(dataDir, det, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector, ROIDataVectorJson)
+                listTemp = pretraitements(dataDir, noDet, listSourcesDet, pixelSize, ROICRSStr, ROICRS, ROIRasterPath, ROIVectorData, ROIVectorDataJson)
 
-                listPathIntra.append([det, listTemp])
+                # On ajoute le numéro du déterminant et la liste de rasters à fusionner.
+                listPathIntra.append([noDet, listTemp])
 
     else:
         print("No projection detected for ROI. Impossible to proceed.")
 
     # Fusion intra déterminant.
-    listPathInter = []
-    for det in range(len(listPathIntra)):
-        code = listPathIntra[det][0]
-        if code == 0:
-            raster = foret(listPathIntra[det][1][0], listPathIntra[det][1][1], listPathIntra[det][1][2], os.path.dirname(listPathIntra[det][1][1]))
-            listPathInter.append([code, int(detPriorite[code]), raster])
+    listPathInter = []  # Liste de listes de tous les rasters devant être utilisés pour les fusions inter-déterminants.
+    for list in range(len(listPathIntra)):
+        noDet = listPathIntra[list][0]
+        if noDet == 0:
+            raster = foret(listPathIntra[list][1][0], listPathIntra[list][1][1], listPathIntra[list][1][2], os.path.dirname(listPathIntra[list][1][1]))
+            listPathInter.append([noDet, int(listPriorites[noDet]), raster])
 
         else:
-            if len(listPathIntra[det][1]) > 1:
-                raster = fusionIntra(dataDir, listPathIntra[det])
-                listPathInter.append([code, int(detPriorite[code]), raster])
+            if len(listPathIntra[list][1]) > 1:
+                raster = fusionIntra(dataDir, listPathIntra[list], noDet)
+                listPathInter.append([noDet, int(listPriorites[noDet]), raster])
 
             else:
-                listPathInter.append([code, int(detPriorite[code]), listPathIntra[det][1][0]])
-
-    print(listPathInter)
+                listPathInter.append([noDet, int(listPriorites[noDet]), listPathIntra[list][1][0]])
 
     fusionInter(dataDir, listPathInter)
+
+    colorer(dataDir, "D:\Données\classification.tif")
         
 if __name__ == "__main__":
     # Initialisation de la fenêtre principale incluant le titre et la taille.

@@ -2,26 +2,26 @@ from generic import *
 
 
 """ Fonction permettant de faire les prétraitements pour chaque déterminant et chaque source de données. """
-# dir: String représentant le répertoire où seront enregistrées les données.
+# dataDir: String représentant le répertoire où seront enregistrées les données.
 # noDet: entier représentant le déterminant courant.
-# sources: Liste contenant les sources de données devant être traitées pour le déterminant courant.
+# listSourcesDet: Liste contenant les sources de données devant être traitées pour le déterminant courant.
 # pixelSize: String représentant la taille d'un pixel (utilisé pour les noms de fichiers).
 # ROICRSStr: String représentant le code EPSG de la donnée vectorielle de référence (EPSG:#).
 # ROICRS: String représentant le code EPSG de la donnée vectorielle de référence (#).
-# ROIPathRaster: String représentant le chemin du fichier raster de référence.
-# ROIDataVector: Objet de type geopandas représentant le fichier vectoriel de référence.
-# ROIDataJson: Objet de type JSON représentant la géométrie du fichier vectoriel de référence au format JSON.
-# listOutPath: Liste contenant les chemins des rasters produits en sortie.
-def pretraitements(dir, noDet, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRaster, ROIDataVector, ROIDataJson):
-    detString = getDet(noDet)
+# ROIRasterPath: String représentant le chemin du fichier raster de référence.
+# ROIVectorData: Objet de type geopandas représentant le fichier vectoriel de référence.
+# ROIVectorDataJson: Objet de type JSON représentant la géométrie du fichier vectoriel de référence au format JSON.
+# listRasterOutPath: Liste contenant les chemins des rasters produits en sortie.
+def pretraitements(dataDir, noDet, listSourcesDet, pixelSize, ROICRSStr, ROICRS, ROIRasterPath, ROIVectorData, ROIVectorDataJson):
+    detStr = getDet(noDet)
 
     # Répertoire où les données seront enregistrées selon le déterminant courant.
-    detDir = os.path.join(dir, detString)
+    detDir = os.path.join(dataDir, detStr)
 
     # Extraction des liens URL menant aux données et d'autres données du fichier Excel.
-    sourcesList = pd.read_excel("ListeSources.xlsx")
-    determ = sourcesList.loc[sourcesList["Determinants"] == detString]
-    detSources = determ.loc[determ["Sources"].isin(sources)]
+    listSources = pd.read_excel("ListeSources.xlsx")
+    dets = listSources.loc[listSources["Determinants"] == detStr]
+    detSources = dets.loc[dets["Sources"].isin(listSourcesDet)]
 
     # Création d'une liste de liens URL menant aux données et d'autres données.
     urlList = [[row.Liens, row.Types, row.Champs, row.Valeurs, row.Noms] for row in detSources.itertuples()]
@@ -29,7 +29,7 @@ def pretraitements(dir, noDet, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRas
     # Création du répertoire où sera contenu les données selon le déterminant courant, s'il n'existe pas.
     createDir(detDir)
 
-    listOutPath = []
+    listRasterOutPath = []
 
     # Pour chaque lien de la liste de liens.
     for url in urlList:
@@ -89,14 +89,14 @@ def pretraitements(dir, noDet, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRas
 
                     # Si un raster découpé n'existe pas.
                     if not os.path.exists(outPathClip):
-                        clipRaster(outPathReproject, outPathClip, ROIDataJson, ROICRS)
+                        clipRaster(outPathReproject, outPathClip, ROIVectorDataJson, ROICRS)
 
                     # Si un raster rééchantillonné n'existe pas.
                     if not os.path.exists(outPathResample):
-                        resampleRaster(outPathClip, ROIPathRaster, outPathResample)
+                        resampleRaster(outPathClip, ROIRasterPath, outPathResample)
 
-                    if outPathResample not in listOutPath:
-                        listOutPath.append(outPathResample)
+                    if outPathResample not in listRasterOutPath:
+                        listRasterOutPath.append(outPathResample)
 
                 else:
                     if not os.path.exists(outPathReproject):
@@ -104,16 +104,16 @@ def pretraitements(dir, noDet, sources, pixelSize, ROICRSStr, ROICRS, ROIPathRas
 
                     clip = False
                     if not os.path.exists(outPathClip):
-                        clip = clipVector(outPathReproject, outPathClip, ROIDataVector)
+                        clip = clipVector(outPathReproject, outPathClip, ROIVectorData)
 
                     # Si le fichier vectoriel n'est pas rasterisé.
                     if not os.path.exists(outPathRaster) and (clip or os.path.exists(outPathClip)):
-                        rasteriseVector(outPathClip, ROIPathRaster, outPathRaster, champs, valeur)
+                        rasteriseVector(outPathClip, ROIRasterPath, outPathRaster, champs, valeur, noDet)
 
-                    if outPathRaster not in listOutPath:
-                        listOutPath.append(outPathRaster)
+                    if outPathRaster not in listRasterOutPath:
+                        listRasterOutPath.append(outPathRaster)
 
             else:
                 print("No projection detected for raster " + outPath + ". Impossible to proceed.")
 
-    return listOutPath
+    return listRasterOutPath
