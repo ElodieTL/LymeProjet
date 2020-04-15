@@ -1,4 +1,4 @@
-from generic import *
+from fonctions import *
 
 
 """ Fonction permettant de faire les prétraitements pour chaque déterminant et chaque source de données. """

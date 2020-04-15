@@ -122,6 +122,8 @@ def getFileRaster():
 # listSources: Liste contenant les sources de données devant être traitées.
 # pixelSize: String représentant la taille d'un pixel (utilisé pour les noms de fichiers).
 def main(dataDir, ROIVectorPath, ROIRasterPath, listDets, listPriorites, listSources, pixelSize):
+    start = time.time()
+
     # Lecture des données du fichier vectoriel de référence.
     ROIVectorData = gpd.read_file(ROIVectorPath)
 
@@ -169,7 +171,12 @@ def main(dataDir, ROIVectorPath, ROIRasterPath, listDets, listPriorites, listSou
 
     fusionInter(dataDir, listPathInter)
 
-    colorer(dataDir, "D:\Données\classification.tif")
+    colorer(raster)
+
+    end = time.time()
+
+    print("Secondes écoulées: " + str(end - start) + ".")
+
         
 if __name__ == "__main__":
     # Initialisation de la fenêtre principale incluant le titre et la taille.

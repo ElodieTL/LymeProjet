@@ -1,4 +1,4 @@
-from generic import *
+from fonctions import *
 
 
 """ Fonction permettant de fusionner des rasters pour un même déterminant. """
@@ -51,14 +51,21 @@ def fusionIntra(dataDir, detPaths, noDet):
 # dataDir: String représentant le chemin vers le répertoire contenant les données.
 # listPathIntra: liste contenant le numéro de déterminant, la priorité et le raster à fusionner.
 def fusionInter(dataDir, listPathIntra):
-    listIntra = sorted(listPathIntra, key=itemgetter(1), reverse=True)
-    nbRasters = len(listIntra)
-    rasters = [listIntra[raster][2] for raster in range(nbRasters)]
+    listIntraAsc = sorted(listPathIntra, key=itemgetter(1))
+    listIntraDesc = sorted(listPathIntra, key=itemgetter(1), reverse=True)
+    nbRasters = len(listIntraDesc)
+    rasters = [listIntraDesc[raster][2] for raster in range(nbRasters)]
+
+    rasterIntermediaire = os.path.join(dataDir, "intermediaire.tif")
+
+    fichier = "classification"
+    for det in range(nbRasters):
+        fichier = fichier + "_" + (getDet(listIntraAsc[det][0]))
+
+    fichier = fichier + ".tif"
+    rasterFinal = os.path.join(dataDir, fichier)
 
     if nbRasters > 1:
-        rasterIntermediaire = os.path.join(dataDir, "intermediaire.tif")
-        rasterFinal = os.path.join(dataDir, "classification.tif")
-
         if not os.path.exists(rasterFinal):
             ("Fusion des " + str(nbRasters) + "rasters.")
 
@@ -68,32 +75,34 @@ def fusionInter(dataDir, listPathIntra):
                         rasterIntermediaire = rasters[0]
 
                     print("Fusion finale. Création du raster " + os.path.basename(rasterFinal) + "...")
-                    rasterClassificationTotale(rasterIntermediaire, rasters[raster + 1], rasterFinal, listIntra[raster + 1][0])
+                    rasterClassificationTotale(rasterIntermediaire, rasters[raster + 1], rasterFinal, listIntraDesc[raster + 1][0])
 
                     if nbRasters != 2:
                         os.remove(rasterIntermediaire)
 
                 elif raster == 0 and nbRasters != 2:  # Si on est au premier raster et qu'il y en a plus que deux à fusionner.
-                    rasterClassificationTotale(rasters[raster], rasters[raster + 1], rasterIntermediaire, listIntra[raster + 1][0])
+                    rasterClassificationTotale(rasters[raster], rasters[raster + 1], rasterIntermediaire, listIntraDesc[raster + 1][0])
                     print("Fusion #1...")
 
                 else:  # Si on traite un raster autre que le premier.
-                    rasterClassificationTotale(rasterIntermediaire, rasters[raster + 1], rasterIntermediaire, listIntra[raster + 1][0])
+                    rasterClassificationTotale(rasterIntermediaire, rasters[raster + 1], rasterIntermediaire, listIntraDesc[raster + 1][0])
                     print("Fusion #" + str(raster + 1) + "...")
 
         return rasterFinal
 
     else:
-        return listIntra[0][2]
+        shutil.copyfile(listIntraDesc[0][2], rasterFinal)
+
+        return rasterFinal
 
 
 """ Fonction permettant de transformer un raster en NG en un raster RGB. """
 # dataDir: String représentant le chemin vers le répertoire contenant les données.
 # inRasterPath: String représentant le chemin vers le raster devant être coloré.
-def colorer(dataDir, inRasterPath):
+def colorer(inRasterPath):
     print("Coloration du raster classifié...")
 
-    outPath = os.path.join(dataDir, "classificationRGB.tif")
+    outPath = inRasterPath.replace(".", "_RGB.tif")
 
     if not os.path.exists(outPath):
         listCouleurs = pd.read_excel("Couleurs.xlsx")
@@ -105,7 +114,7 @@ def colorer(dataDir, inRasterPath):
         rasterB3 = raster.GetRasterBand(1).ReadAsArray()
 
         for i in range(raster.RasterYSize):
-            for j in range(raster.RasterYSize):
+            for j in range(raster.RasterXSize):
                 ng = rasterB1[i, j]
 
                 # Si le NG n'est pas nul.
@@ -116,7 +125,7 @@ def colorer(dataDir, inRasterPath):
                     rasterB2[i, j] = couleur["G"]
                     rasterB3[i, j] = couleur["B"]
 
-        rasterCouleur = gdal.GetDriverByName("GTiff").Create(outPath, raster.RasterXSize, raster.RasterXSize, 3)
+        rasterCouleur = gdal.GetDriverByName("GTiff").Create(outPath, raster.RasterXSize, raster.RasterYSize, 3)
         rasterCouleur.GetRasterBand(1).WriteArray(rasterB1)
         rasterCouleur.GetRasterBand(2).WriteArray(rasterB2)
         rasterCouleur.GetRasterBand(3).WriteArray(rasterB3)

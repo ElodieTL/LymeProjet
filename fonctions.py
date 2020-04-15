@@ -6,6 +6,7 @@ import geopandas as gpd
 import rasterio as rio
 import json
 import pycrs
+import shutil
 import math
 import numpy as np
 from rasterio.merge import merge
@@ -29,6 +30,7 @@ import pandas as pd
 import earthpy.spatial as es
 import earthpy.plot as ep
 from operator import itemgetter
+import time
 
 
 """ Fonction permettant d'extraire le code EPSG (la projection) d'une donnée vectorielle. """
@@ -142,6 +144,7 @@ def downloadData(url, outPath, pathDir="", compress=False):
 
     if compress:
         print("Extraction du fichier " + fileName + "...")
+
         Archive(outPath).extractall(pathDir)
 
 
@@ -349,7 +352,7 @@ def rasterClassification(inRaster1Path, inRaster2Path, outRasterPath, noDet):
     raster2B1 = raster2.GetRasterBand(1).ReadAsArray()
 
     for i in range(raster1.RasterYSize):
-        for j in range(raster1.RasterYSize):
+        for j in range(raster1.RasterXSize):
             if raster1B1[i, j] != 5 * noDet:
                 raster1B1[i, j] = raster2B1[i, j]
 
@@ -419,7 +422,7 @@ def foret(inPathFeuillus, inPathConiferes, inPathInconnu, dir):
         rasterAllBand2 = rasterAll.GetRasterBand(3).ReadAsArray()
 
         for i in range(rasterAll.RasterYSize):
-            for j in range(rasterAll.RasterYSize):
+            for j in range(rasterAll.RasterXSize):
                 if rasterAllBand0[i, j] == 0 and rasterAllBand1[i, j] == 0 and rasterAllBand2[i, j] == 0:  # Aucune forêt
                     rasterAllBand0[i, j] = 0
 
