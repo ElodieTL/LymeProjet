@@ -339,9 +339,9 @@ def rasteriseVector(inVectorPath, inRasterPath, outRasterPath, champs, valeur, n
     gdal.RasterizeLayer(out, [1], vectorLayer, None, None, [5 * noDet])
 
 
-""" Fonction permettant de fusionner deux rasters en priorisant le premier. """
-# inRaster1Path: String représentant le chemin vers le premier raster.
-# inRaster1Path: String représentant le chemin vers le deuxième raster.
+""" Fonction permettant de fusionner deux rasters en priorisant le premier. (Intra) """
+# inRaster1Path: String représentant le chemin vers le premier raster. Le raster intermédiaire doit toujours être le inRaster1Path.
+# inRaster2Path: String représentant le chemin vers le deuxième raster.
 # outRasterPath: String représentant le chemin vers le raster en sortie.
 # noDet: nombre représentant le numéro du déterminant.
 def rasterClassification(inRaster1Path, inRaster2Path, outRasterPath, noDet):
@@ -356,16 +356,21 @@ def rasterClassification(inRaster1Path, inRaster2Path, outRasterPath, noDet):
             if raster1B1[i, j] != 5 * noDet:
                 raster1B1[i, j] = raster2B1[i, j]
 
-    del raster2
+    del raster1
 
-    rasterClass = gdal.GetDriverByName("GTiff").Create(outRasterPath, raster1.RasterXSize, raster1.RasterYSize, 1)
+    rasterClass = gdal.GetDriverByName("GTiff").Create(outRasterPath, raster2.RasterXSize, raster2.RasterYSize, 1)
     rasterClass.GetRasterBand(1).WriteArray(raster1B1)
 
-    rasterClass.SetProjection(raster1.GetProjection())
-    rasterClass.SetGeoTransform(raster1.GetGeoTransform())
+    rasterClass.SetProjection(raster2.GetProjection())
+    rasterClass.SetGeoTransform(raster2.GetGeoTransform())
     rasterClass.FlushCache()
 
 
+""" Fonction permettant de fusionner deux rasters en priorisant le premier. (Inter) """
+# inRaster1Path: String représentant le chemin vers le premier raster. Le raster intermédiaire doit toujours être le inRaster1Path.
+# inRaster2Path: String représentant le chemin vers le deuxième raster.
+# outRasterPath: String représentant le chemin vers le raster en sortie.
+# noDet2: nombre représentant le numéro du déterminant représentant le deuxière raster.
 def rasterClassificationTotale(inRaster1Path, inRaster2Path, outPath, noDet2):
     raster1 = gdal.Open(inRaster1Path, gdal.GA_ReadOnly)
     raster2 = gdal.Open(inRaster2Path, gdal.GA_ReadOnly)
@@ -383,11 +388,13 @@ def rasterClassificationTotale(inRaster1Path, inRaster2Path, outPath, noDet2):
                 if raster2B1[i, j] == 5 * noDet2:
                     raster1B1[i, j] = raster2B1[i, j]
 
-    rasterClass = gdal.GetDriverByName("GTiff").Create(outPath, raster1.RasterXSize, raster1.RasterYSize, 1)
+    del raster1
+
+    rasterClass = gdal.GetDriverByName("GTiff").Create(outPath, raster2.RasterXSize, raster2.RasterYSize, 1)
     rasterClass.GetRasterBand(1).WriteArray(raster1B1)
 
-    rasterClass.SetProjection(raster1.GetProjection())
-    rasterClass.SetGeoTransform(raster1.GetGeoTransform())
+    rasterClass.SetProjection(raster2.GetProjection())
+    rasterClass.SetGeoTransform(raster2.GetGeoTransform())
     rasterClass.FlushCache()
 
 
