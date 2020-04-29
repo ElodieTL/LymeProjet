@@ -20,14 +20,14 @@ def fusionIntra(dataDir, detPaths, noDet):
         rasterFinal = os.path.join(detDir, "final.tif")
 
         if not os.path.exists(rasterFinal):
-            print("Fusion intra du déterminant " + detStr + ". Il y a " + str(nbRasters) + " rasters à fusionner.")
+            print("Fusion intra-déterminant du déterminant " + detStr + ". Il y a " + str(nbRasters) + " rasters à fusionner.")
 
             for raster in range(nbRasters - 1):
-                if (raster + 2) == nbRasters:  # S'il y a seulement deux rasters à fusionner ou s'il ne reste qu'à fusionner le raster final.
+                if (raster + 2) == nbRasters:  # S'il y a seulement deux rasters à fusionner ou s'il ne reste qu'à fusionner deux rasters.
                     if nbRasters == 2:
                         rasterIntermediaire = rasters[0]
 
-                    print("Fusion finale. Création du raster " + os.path.basename(rasterFinal) + "...")
+                    print("          Fusion finale. Création du raster " + os.path.basename(rasterFinal) + "...")
                     rasterClassification(rasterIntermediaire, rasters[raster + 1], rasterFinal, noDet)
 
                     if nbRasters != 2:
@@ -35,11 +35,13 @@ def fusionIntra(dataDir, detPaths, noDet):
 
                 elif raster == 0 and nbRasters != 2:  # Si on est au premier raster et qu'il y en a plus que deux à fusionner.
                     rasterClassification(rasters[raster], rasters[raster + 1], rasterIntermediaire, noDet)
-                    print("Fusion #1...")
+                    print("          Fusion #1...")
 
                 else:  # Si on traite un raster autre que le premier.
                     rasterClassification(rasterIntermediaire, rasters[raster + 1], rasterIntermediaire, noDet)
-                    print("Fusion #" + str(raster + 1) + "...")
+                    print("          Fusion #" + str(raster + 1) + "...")
+
+        print("Fin de la fusion intra-déterminant pour le déterminant " + detStr + ".")
 
         return rasterFinal
 
@@ -74,7 +76,7 @@ def fusionInter(dataDir, listPathIntra):
                     if nbRasters == 2:
                         rasterIntermediaire = rasters[0]
 
-                    print("Fusion finale. Création du raster " + os.path.basename(rasterFinal) + "...")
+                    print("          Fusion finale. Création du raster " + os.path.basename(rasterFinal) + "...")
                     rasterClassificationTotale(rasterIntermediaire, rasters[raster + 1], rasterFinal, listIntraDesc[raster + 1][0])
 
                     if nbRasters != 2:
@@ -82,15 +84,17 @@ def fusionInter(dataDir, listPathIntra):
 
                 elif raster == 0 and nbRasters != 2:  # Si on est au premier raster et qu'il y en a plus que deux à fusionner.
                     rasterClassificationTotale(rasters[raster], rasters[raster + 1], rasterIntermediaire, listIntraDesc[raster + 1][0])
-                    print("Fusion #1...")
+                    print("          Fusion #1...")
 
                 else:  # Si on traite un raster autre que le premier.
                     rasterClassificationTotale(rasterIntermediaire, rasters[raster + 1], rasterIntermediaire, listIntraDesc[raster + 1][0])
-                    print("Fusion #" + str(raster + 1) + "...")
+                    print("          Fusion #" + str(raster + 1) + "...")
 
         return rasterFinal
 
     else:
+        print("Aucune fusion inter-déterminants à effectuer.")
+
         shutil.copyfile(listIntraDesc[0][2], rasterFinal)
 
         return rasterFinal
@@ -102,7 +106,7 @@ def fusionInter(dataDir, listPathIntra):
 def colorer(inRasterPath):
     print("Coloration du raster classifié...")
 
-    outPath = inRasterPath.replace(".", "_RGB.tif")
+    outPath = inRasterPath.replace(".", "_RGB.")
 
     if not os.path.exists(outPath):
         listCouleurs = pd.read_excel("Couleurs.xlsx")

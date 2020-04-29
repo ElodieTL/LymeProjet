@@ -14,6 +14,7 @@ from fonctions import *
 # listRasterOutPath: Liste contenant les chemins des rasters produits en sortie.
 def pretraitements(dataDir, noDet, listSourcesDet, pixelSize, ROICRSStr, ROICRS, ROIRasterPath, ROIVectorData, ROIVectorDataJson):
     detStr = getDet(noDet)
+    print("Début des prétraitements pour le déterminant " + detStr + "...")
 
     # Répertoire où les données seront enregistrées selon le déterminant courant.
     detDir = os.path.join(dataDir, detStr)
@@ -95,7 +96,7 @@ def pretraitements(dataDir, noDet, listSourcesDet, pixelSize, ROICRSStr, ROICRS,
                     if not os.path.exists(outPathResample):
                         resampleRaster(outPathClip, ROIRasterPath, outPathResample)
 
-                    if outPathResample not in listRasterOutPath:
+                    if os.path.exists(outPathResample) and outPathResample not in listRasterOutPath:
                         listRasterOutPath.append(outPathResample)
 
                 else:
@@ -110,10 +111,12 @@ def pretraitements(dataDir, noDet, listSourcesDet, pixelSize, ROICRSStr, ROICRS,
                     if not os.path.exists(outPathRaster) and (clip or os.path.exists(outPathClip)):
                         rasteriseVector(outPathClip, ROIRasterPath, outPathRaster, champs, valeur, noDet)
 
-                    if outPathRaster not in listRasterOutPath:
+                    if os.path.exists(outPathRaster) and outPathRaster not in listRasterOutPath:
                         listRasterOutPath.append(outPathRaster)
 
             else:
                 print("No projection detected for raster " + outPath + ". Impossible to proceed.")
+
+    print("Fin des prétraitements pour le déterminant " + detStr + ".")
 
     return listRasterOutPath

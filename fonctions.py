@@ -31,6 +31,9 @@ import earthpy.spatial as es
 import earthpy.plot as ep
 from operator import itemgetter
 import time
+import warnings
+
+warnings.filterwarnings('ignore', 'GeoSeries.notna', UserWarning)
 
 
 """ Fonction permettant d'extraire le code EPSG (la projection) d'une donnée vectorielle. """
@@ -76,7 +79,7 @@ def extractEPSGRaster(inRasterPath):
         return None, None
 
 
-""" Fonction permettant de créer une liste des chemins menant au données. """
+""" Fonction permettant de créer une liste des chemins menant aux données. """
 # inDir: String représentant le chemin vers le répertoire contenant les fichiers du déterminants.
 # criteres: tuple des critères de sélection des fichiers désirés se terminant par... (".shp", ".pdf").
 # conditions: tuple des critères négatifs de sélection des fichiers désirés ne se terminant pas par... (facultatif).
@@ -100,7 +103,7 @@ def listFiles(inDir, criteres, conditions=None):
 # inDir: String représentant le chemin du répertoire devant être créé, s'il n'existe pas.
 def createDir(inDir):
     if not os.path.exists(inDir):
-        print("Création du répertoire " + inDir + "...")
+        print("          Création du répertoire " + inDir + "...")
 
         os.makedirs(inDir)
 
@@ -138,12 +141,12 @@ def createPaths(inDir, baseName, pixelSize, rasterise=False):
 # zip: Boolean représentant si les données à télécharger sont contenues dans un fichier compressé (facultatif).
 def downloadData(url, outPath, pathDir="", compress=False):
     fileName = os.path.basename(url)
-    print("Téléchargement du fichier " + fileName + "...")
+    print("          Téléchargement du fichier " + fileName + "...")
 
     urllib.request.urlretrieve(url, outPath)
 
     if compress:
-        print("Extraction du fichier " + fileName + "...")
+        print("          Extraction du fichier " + fileName + "...")
 
         Archive(outPath).extractall(pathDir)
 
@@ -154,7 +157,7 @@ def downloadData(url, outPath, pathDir="", compress=False):
 # dstCrs: String représentant le code EPSG de la projection voulue (EPSG:#).
 def reprojectRaster(inRasterPath, outRasterPath, dstCRS):
     fileName = os.path.basename(inRasterPath)
-    print("Reprojection du raster " + fileName + "...")
+    print("          Reprojection du raster " + fileName + "...")
 
     # Extraire les métadonnées.
     with rio.open(inRasterPath) as src:
@@ -174,7 +177,7 @@ def reprojectRaster(inRasterPath, outRasterPath, dstCRS):
 # dstCrs: String représentant le code EPSG de la projection voulue (EPSG:#).
 def reprojectVector(inVectorData, outVectorPath, dstCRS):
     fileName = os.path.basename(outVectorPath)
-    print("Reprojection du fichier " + fileName.replace("_reproject", "") + "...")
+    print("          Reprojection du fichier " + fileName.replace("_reproject", "") + "...")
 
     vectorDataReproject = inVectorData.to_crs(dstCRS)
     vectorDataReproject.to_file(outVectorPath)
@@ -193,7 +196,7 @@ def geoToJson(gdf):
 # dstCRS: int représentant le code EPSG de la projection voulue (#).
 def clipRaster(inRasterPath, outRasterPath, clipPoly, dstCRS):
     fileName = os.path.basename(inRasterPath)
-    print("Découpage du raster " + fileName + "...")
+    print("          Découpage du raster " + fileName + "...")
 
     # Ouvrir le raster.
     raster = rio.open(inRasterPath)
@@ -217,14 +220,15 @@ def clipRaster(inRasterPath, outRasterPath, clipPoly, dstCRS):
 # clip: Boolean indiquant si un fichier découpé a été produit.
 def clipVector(inVectorPath, outVectorPath, clipPoly):
     fileName = os.path.basename(inVectorPath)
-    print("Découpage du fichier vectoriel " + fileName + "...")
+    print("          Découpage du fichier vectoriel " + fileName + "...")
 
     # Ouvrir le fichier vectoriel.
     dataVector = gpd.read_file(inVectorPath)
 
     if not dataVector.empty:
-        # Appliquer un buffer nul (pour gérer les géométries invalides, au besoin).
-        dataVector["geometry"] = dataVector.apply(lambda row: row.geometry.buffer(0) if row.geometry.geom_type == "Polygon" else row.geometry, axis=1)
+        if dataVector["geometry"][0].geom_type == "Polygon" or dataVector["geometry"][0].geom_type == "MultiPolygon":
+            # Appliquer un buffer nul (pour gérer les géométries invalides, au besoin).
+            dataVector["geometry"] = dataVector.geometry.buffer(0)
 
         # Déterminer si la couche comporte que des éléments de type point
         #filterPoint = False
@@ -241,18 +245,17 @@ def clipVector(inVectorPath, outVectorPath, clipPoly):
             return clip
 
         else:
-            print("Aucune donnée restante après découpage.")
+            print("               Aucune donnée restante après découpage. Supression des fichiers liés.")
             clip = False
 
             # Supprimer les fichiers afin de ne pas refaire les traitements dans le futur.
-            print("Suppression des fichiers liés.")
             for file in glob.glob(inVectorPath.replace("_reproject.shp", "*")):
                 os.remove(file)
 
             return clip
 
 
-""" fonction permettant de codifier le déterminant courant en String """
+""" Fonction permettant de codifier le déterminant courant en String. """
 # noDet: nombre représentant le code du déterminant.
 # strDet: String représentant le déterminant sous format texte.
 def getDet(noDet):
@@ -289,7 +292,7 @@ def getDet(noDet):
 # outRasterPath: String représentant le chemin vers le fichier raster sortant.
 def resampleRaster(inRasterPath, inRefRasterPath, outRasterPath):
     fileName = os.path.basename(inRasterPath)
-    print("Rééchantillonnage du raster " + fileName + "...")
+    print("          Rééchantillonnage du raster " + fileName + "...")
 
     src = gdal.Open(inRasterPath, gdal.GA_ReadOnly)
     srcProj = src.GetProjection()
@@ -307,7 +310,7 @@ def resampleRaster(inRasterPath, inRefRasterPath, outRasterPath):
     del out
 
 
-""" Fonction permettant de rasteriser un fichier vectoriel. """
+""" Fonction permettant de rastériser un fichier vectoriel. """
 # inVectorPath: String représentant le chemin vers le fichier vectoriel entrant.
 # inRasterPath: String représentant le chemin vers le fichier raster servant de référence.
 # outRasterPath: String représentant le chemin vers le fichier raster sortant.
@@ -316,7 +319,7 @@ def resampleRaster(inRasterPath, inRefRasterPath, outRasterPath):
 # noDet: nombre correspondant au numéro du déterminant.
 def rasteriseVector(inVectorPath, inRasterPath, outRasterPath, champs, valeur, noDet):
     fileName = os.path.basename(inVectorPath)
-    print("Rasterisation du fichier " + fileName + "...")
+    print("          Rasterisation du fichier " + fileName + "...")
 
     rasterRef = gdal.Open(inRasterPath, gdal.GA_ReadOnly)
 
@@ -409,7 +412,8 @@ def foret(inPathFeuillus, inPathConiferes, inPathInconnu, dir):
 
     # Si la fusion des trois rasters n'a pas déjà été faite.
     if not os.path.exists(pathAll):
-        print("Fusion des rasters...")
+        fileName = os.path.basename(pathAll)
+        print("          Création du raster fusionné " + fileName + "...")
 
         # Création d'une liste des fichiers raster pertinents.
         list = [inPathFeuillus, inPathConiferes, inPathInconnu]
@@ -420,7 +424,7 @@ def foret(inPathFeuillus, inPathConiferes, inPathInconnu, dir):
     # Si la classification n'a pas été faite.
     if not os.path.exists(pathClass):
         fileName = os.path.basename(pathClass)
-        print("Classification du raster " + fileName + "...")
+        print("          Classification du raster " + fileName + "...")
 
         # Ouverture des données.
         rasterAll = gdal.Open(pathAll, gdal.GA_ReadOnly)

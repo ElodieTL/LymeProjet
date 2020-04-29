@@ -6,6 +6,8 @@ from fusion import *
 
 """ Fonction permettant d'extraire les informations demandées par l'utilisateur dans l'application (après avoir cliqué OK). """
 def getValues():
+    print("Cueillette des informations sélectionnées...")
+
     # Créer une liste vide des déterminants qui devront être traités.
     listDets = []
 
@@ -158,8 +160,12 @@ def main(dataDir, ROIVectorPath, ROIRasterPath, listDets, listPriorites, listSou
     for list in range(len(listPathIntra)):
         noDet = listPathIntra[list][0]
         if noDet == 0:
+            print("Début de la fusion intra-déterminant pour le déterminant Foret...")
+
             raster = foret(listPathIntra[list][1][0], listPathIntra[list][1][1], listPathIntra[list][1][2], os.path.dirname(listPathIntra[list][1][1]))
             listPathInter.append([noDet, int(listPriorites[noDet]), raster])
+
+            print("Fin de la fusion intra-déterminant pour le déterminant Foret...")
 
         else:
             if len(listPathIntra[list][1]) > 1:
@@ -167,22 +173,26 @@ def main(dataDir, ROIVectorPath, ROIRasterPath, listDets, listPriorites, listSou
                 listPathInter.append([noDet, int(listPriorites[noDet]), raster])
 
             else:
+                print("Aucune fusion intra-déterminant à effectuer.")
+
                 listPathInter.append([noDet, int(listPriorites[noDet]), listPathIntra[list][1][0]])
 
-    fusionInter(dataDir, listPathInter)
+    print("Début de la fusion inter-déterminants...")
+    rasterFinal = fusionInter(dataDir, listPathInter)
+    print("Fin de la fusion inter-déterminants...")
 
-    colorer(raster)
+    colorer(rasterFinal)
 
     end = time.time()
 
-    print("Secondes écoulées: " + str(end - start) + ".")
+    print("Minutes écoulées: " + str(round((end - start) / 60)))
 
         
 if __name__ == "__main__":
     # Initialisation de la fenêtre principale incluant le titre et la taille.
     mainWindow = Tk()
     mainWindow.title("Fusion et classification de déterminants environnementaux")
-    mainWindow.geometry("370x500")
+    mainWindow.geometry("450x500")
 
     # Initialisation d'une barre de défilement.
     scrollbar = Scrollbar(mainWindow)
@@ -332,43 +342,39 @@ if __name__ == "__main__":
     prioriteCouvertureSol.grid(row=9, column=4)
 
     # Ajout d'une entrée et d'un bouton pour entrer le chemin vers le répertoire où seront enregistré les données.
-    labelDir = Label(frame, text="Data Directory:")
+    labelDir = Label(frame, text="Répertoire des données:")
     labelDir.grid(row=10, column=0)
     entryDir = Entry(frame)
     entryDir.grid(row=10, column=1, columnspan=3)
     buttonDir = Button(frame, text="...", command=getDir)
     buttonDir.grid(row=10, column=4)
-    entryDir.insert(END, "Z:\GMT3051\Donnees")
 
     # Ajout d'une entrée et d'un bouton pour entrer le chemin vers le fichier vectoriel de référence.
-    labelVec = Label(frame, text="ROI Vector:")
+    labelVec = Label(frame, text="ROI vectorielle:")
     labelVec.grid(row=11, column=0)
     entryVec = Entry(frame)
     entryVec.grid(row=11, column=1, columnspan=3)
     buttonVec = Button(frame, text="...", command=getFileVector)
     buttonVec.grid(row=11, column=4)
-    entryVec.insert(END, "Z:\GMT3051\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2.shp")
 
     # Ajout d'une entrée et d'un bouton pour entrer le chemin vers le fichier raster de référence.
-    labelRaster = Label(frame, text="ROI Raster:")
+    labelRaster = Label(frame, text="ROI raster:")
     labelRaster.grid(row=12, column=0)
     entryRaster = Entry(frame)
     entryRaster.grid(row=12, column=1, columnspan=3)
     buttonRaster = Button(frame, text="...", command=getFileRaster)
     buttonRaster.grid(row=12, column=4)
-    entryRaster.insert(END, "Z:\GMT3051\ROI\ROI_Projet_Genie_Maladies_Vectorielles_v2_30.tif")
 
     # Ajout d'une entrée et d'un bouton pour entrer une taille de pixel.
-    labelPixel = Label(frame, text="Pixel Size:")
+    labelPixel = Label(frame, text="Résolution:")
     labelPixel.grid(row=13, column=0)
     entryPixel = Entry(frame)
     entryPixel.grid(row=13, column=1, columnspan=3)
-    entryPixel.insert(END, "30")
 
     # Ajout de deux boutons pour poursuivre et pour quitter.
-    buttonOK = Button(frame, text="OK", command=getValues)
+    buttonOK = Button(frame, text="Lancer les traitements", command=getValues)
     buttonOK.grid(row=14, column=1)
-    buttonQuit = Button(frame, text="Quit", command=sys.exit)
+    buttonQuit = Button(frame, text="Quitter", command=sys.exit)
     buttonQuit.grid(row=14, column=2)
 
     mainWindow.update()
